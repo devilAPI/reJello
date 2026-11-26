@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "jello",
+  "version": "${version}",
+  "name": "Jello",
+  "description": "SigmaJello client, ported from MCP 1.8 to Minecraft 26.3 (Fabric).",
+  "authors": ["Mentalfrostbyte"],
+  "license": "All-Rights-Reserved",
+  "icon": "assets/jello/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.mentalfrostbyte.jello.JelloClient"]
+  },
+  "mixins": ["jello.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

@@ -1,0 +1,112 @@
+package com.mentalfrostbyte.jello.module.modules;
+
+import com.mentalfrostbyte.jello.module.Category;
+import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.util.TimerUtil;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * Scaffold: keeps a block underneath the player by placing from the hotbar.
+ * The 1.8 version also sent synthetic position packets; 26.x places server-authoritatively, so only the
+ * click is sent here.
+ */
+public class BlockFly extends Module {
+	public static boolean isEnabled;
+	private final TimerUtil timer = new TimerUtil();
+
+	public BlockFly() {
+		super("Block Fly", InputConstants.KEY_J, Category.MOVEMENT);
+	}
+
+	@Override
+	public void onEnable() {
+		isEnabled = true;
+		timer.reset();
+	}
+
+	@Override
+	public void onDisable() {
+		isEnabled = false;
+	}
+
+	@Override
+	public void onUpdate() {
+		if (!isToggled() || mc.player == null || mc.level == null || mc.gameMode == null) {
+			return;
+		}
+		if (!timer.hasTimeElapsed(50, true)) {
+			return;
+		}
+		LocalPlayer player = mc.player;
+		int slot = findBlockSlot();
+		if (slot == -1) {
+			return;
+		}
+		BlockPos target = BlockPos.containing(player.getX(), player.getY() - 1.0, player.getZ());
+		if (mc.options.keyJump.isDown()) {
+			target = target.above();
+		}
+		BlockState targetState = mc.level.getBlockState(target);
+		if (!targetState.canBeReplaced()) {
+			return;
+		}
+		for (Direction direction : Direction.values()) {
+			BlockPos support = target.relative(direction);
+			BlockState supportState = mc.level.getBlockState(support);
+			if (supportState.canBeReplaced() || !supportState.getFluidState().isEmpty()) {
+				continue;
+			}
+			Direction face = direction.getOpposite();
+			Vec3 hit = Vec3.atCenterOf(support).add(face.getStepX() * 0.5, face.getStepY() * 0.5, face.getStepZ() * 0.5);
+			player.setYRot(yawTo(player.getEyePosition(), hit));
+			player.setXRot(pitchTo(player.getEyePosition(), hit));
+			if (player.getInventory().getSelectedSlot() != slot) {
+				player.getInventory().setSelectedSlot(slot);
+				if (mc.getConnection() != null) {
+					mc.getConnection().send(new ServerboundSetCarriedItemPacket(slot));
+				}
+			}
+			mc.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, new BlockHitResult(hit, face, support, false));
+			player.swing(InteractionHand.MAIN_HAND, net.minecraft.world.item.component.SwingAnimation.DEFAULT, false);
+			return;
+		}
+	}
+
+	private static int findBlockSlot() {
+		if (mc.player == null) {
+			return -1;
+		}
+		for (int i = 0; i < 9; i++) {
+			ItemStack stack = mc.player.getInventory().getItem(i);
+			if (stack.getItem() instanceof BlockItem block && isValidBlock(block.getBlock().defaultBlockState())) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	private static boolean isValidBlock(BlockState state) {
+		return !state.isAir() && state.isSolidRender() && state.getFluidState().isEmpty();
+	}
+
+	private static float yawTo(Vec3 eye, Vec3 target) {
+		return (float) Math.toDegrees(Math.atan2(target.z - eye.z, target.x - eye.x)) - 90f;
+	}
+
+	private static float pitchTo(Vec3 eye, Vec3 target) {
+		double dx = target.x - eye.x;
+		double dz = target.z - eye.z;
+		double dy = target.y - eye.y;
+		return (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
+	}
+}
