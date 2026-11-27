@@ -25,8 +25,7 @@ public class JelloClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			EventManager.call(new EventTick());
 			Jello.onUpdate();
-			Jello.jgui.onTick();
-		});
+			Jello.jgui.onTick();		});
 
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
 			for (Module module : Jello.getModules()) {

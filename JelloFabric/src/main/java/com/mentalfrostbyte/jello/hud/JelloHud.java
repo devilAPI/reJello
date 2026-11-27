@@ -150,7 +150,8 @@ public class JelloHud {
 		Render2D.image(g, "jello", -0.5f, -0.5f, 86, 49);
 		boolean tab = Jello.isEnabled("TabGUI");
 		if (tab) {
-			Render2D.image(g, "tabguishadow", 0.5f, 40.5f, 84, 86);
+			// The Reborn tab shadow only covered five categories; stretch it over all seven.
+			Render2D.image(g, "tabguishadow", 0.5f, 40.5f, 84, Jello.tabgui.cats.size() * 15 + 6);
 		}
 		int yOff = 0;
 		if (Jello.isEnabled("MiniMap")) {
@@ -186,8 +187,10 @@ public class JelloHud {
 	}
 
 	private void renderTabGui(GuiGraphicsExtractor g) {
-		int top = smoothColor(tCur, tLast), bottom = smoothColor(bCur, bLast);
-		Render2D.gradient(g, 5, 45, 80, 122, top, bottom);
+		// A fixed dark panel stays readable over every background (the sampled world tint looked patchy).
+		int top = 0xC0101010;
+		int bottom = 0xE0101010;
+		Render2D.gradient(g, 5, 45, 80, 45 + Jello.tabgui.cats.size() * 15 + 2, top, bottom);
 		TabGUI tabgui = Jello.tabgui;
 		double fps = Anim.fpsFactor(5);
 		if (tabgui.showModules) {
@@ -228,7 +231,9 @@ public class JelloHud {
 			for (int i = 0; i < 2; i++) {
 				c.seenTrans += (float) ((((selected ? 7 : 0) - c.seenTrans) / fps) + 0.001);
 			}
-			Render2D.image(g, c.texture, 5 + c.seenTrans, 45 + x * 15, 75, 17);
+			// TTF labels instead of the 150x34 bitmap category textures: crisp at every GUI scale.
+			Fonts.jelloFontMedium.drawString(g, c.name, 12 + c.seenTrans, 45 + x * 15 + 3.5f,
+				selected ? 0xFFFFFFFF : 0xCCFFFFFF);
 			x++;
 		}
 	}

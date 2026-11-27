@@ -45,7 +45,8 @@ public final class JFont {
 			return x;
 		}
 		g.pose().pushMatrix();
-		g.pose().translate(x, y);
+		// Integer alignment keeps the TTF atlas crisp; fractional offsets made glyphs look blocky.
+		g.pose().translate(Math.round(x), Math.round(y));
 		g.text(mc(), component(text), 0, 0, color, false);
 		g.pose().popMatrix();
 		return x + getStringWidth(text);

@@ -93,6 +93,7 @@ public final class CommandManager {
 				case "settings", "values" -> settings(args);
 				case "set" -> set(args);
 				case "gui", "clickgui" -> gui();
+				case "panic", "off" -> panic();
 				case "config" -> config(args);
 				case "alt" -> alt(args);
 				default -> Jello.addChatMessage("Unknown command. Use .help");
@@ -101,6 +102,18 @@ public final class CommandManager {
 			Jello.addChatMessage("Command failed: " + e.getMessage());
 		}
 		return false;
+	}
+
+	private static void panic() {
+		int disabled = 0;
+		for (Module module : Jello.getModules()) {
+			if (module.isToggled()) {
+				module.setToggled(false);
+				disabled++;
+			}
+		}
+		ConfigManager.save();
+		Jello.addChatMessage("Disabled " + disabled + " module(s)");
 	}
 
 	private static void help() {
@@ -113,6 +126,7 @@ public final class CommandManager {
 		Jello.addChatMessage(".settings <module>");
 		Jello.addChatMessage(".set <module> <setting> <value>");
 		Jello.addChatMessage(".gui");
+		Jello.addChatMessage(".panic  - disable every enabled module");
 		Jello.addChatMessage(".config save|load");
 		Jello.addChatMessage(".alt add <name> | .alt list | .alt login <name> | .alt remove <name>");
 	}

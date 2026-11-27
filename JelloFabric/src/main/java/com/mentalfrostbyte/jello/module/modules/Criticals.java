@@ -6,7 +6,6 @@ import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.setting.ModeValue;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 
 /** Critical-hit packet modes. */
 public class Criticals extends Module {
@@ -22,24 +21,15 @@ public class Criticals extends Module {
 		if (!isToggled() || p == null || mc.getConnection() == null) {
 			return;
 		}
+		// 26.3 disconnects on a second position packet in the same tick, so the old two-Pos
+		// Criticals packet trick cannot be used. Only the client-side ground flag is changed.
 		switch (mode.getMode()) {
 			case "Jump" -> {
 				if (p.onGround()) {
 					p.jumpFromGround();
 				}
 			}
-			case "PacketLegit" -> {
-				if (!p.onGround()) {
-					mc.getConnection().send(new ServerboundMovePlayerPacket.StatusOnly(false, p.horizontalCollision));
-				}
-			}
-			default -> {
-				if (p.onGround()) {
-					double y = p.getY();
-					mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(p.getX(), y + 0.0626, p.getZ(), false, false));
-					mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(p.getX(), y, p.getZ(), false, false));
-				}
-			}
+			default -> p.setOnGround(false);
 		}
 	}
 }
