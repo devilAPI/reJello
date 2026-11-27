@@ -7,6 +7,7 @@ import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.render.Render2D;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 
 /** 2D tracers from the crosshair toward nearby players. */
 public class Tracers extends Module {
@@ -28,14 +29,13 @@ public class Tracers extends Module {
 			if (mc.player.distanceTo(entity) > 64) {
 				continue;
 			}
-			double dx = entity.getX() - mc.player.getX();
-			double dz = entity.getZ() - mc.player.getZ();
-			float angle = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90f;
-			float relative = angle - mc.player.getYRot();
-			double radians = Math.toRadians(relative);
-			float x = centerX + (float) Math.sin(radians) * 200;
-			float y = centerY - (float) Math.cos(radians) * 120;
-			Render2D.rect(event.graphics, centerX, centerY, x, y, 0x66FF5555);
+			Vec3 projected = mc.gameRenderer.projectPointToScreen(entity.position().add(0, entity.getBbHeight() * 0.5, 0));
+			if (projected.z < -1 || projected.z > 1) {
+				continue;
+			}
+			float x = (float) ((projected.x * 0.5 + 0.5) * event.graphics.guiWidth());
+			float y = (float) ((-projected.y * 0.5 + 0.5) * event.graphics.guiHeight());
+			Render2D.line(event.graphics, centerX, centerY, x, y, 1.0f, 0x66FF5555);
 		}
 	}
 }

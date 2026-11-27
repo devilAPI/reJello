@@ -147,6 +147,11 @@ public class JelloHud {
 	}
 
 	private void renderHud(GuiGraphicsExtractor g) {
+		// The 1.8 HUD was designed for a ~480x260 GUI. At higher GUI scales it has to shrink,
+		// otherwise the seven-category TabGUI, minimap and keystrokes overlap each other.
+		float hudScale = Math.min(1f, Math.max(0.45f, (g.guiHeight() - 8) / 330f));
+		g.pose().pushMatrix();
+		g.pose().scale(hudScale, hudScale);
 		Render2D.image(g, "jello", -0.5f, -0.5f, 86, 49);
 		boolean tab = Jello.isEnabled("TabGUI");
 		if (tab) {
@@ -166,6 +171,7 @@ public class JelloHud {
 		if (tab) {
 			renderTabGui(g);
 		}
+		g.pose().popMatrix();
 	}
 
 	private void renderKeyStrokes(GuiGraphicsExtractor g, int yOff) {

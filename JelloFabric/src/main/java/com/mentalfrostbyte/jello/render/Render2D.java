@@ -86,6 +86,21 @@ public final class Render2D {
 		g.pose().popMatrix();
 	}
 
+	/** Thin line from (x0,y0) to (x1,y1). */
+	public static void line(GuiGraphicsExtractor g, float x0, float y0, float x1, float y1, float thickness, int color) {
+		float dx = x1 - x0, dy = y1 - y0;
+		float length = (float) Math.sqrt(dx * dx + dy * dy);
+		if (length <= 0 || thickness <= 0 || (color >>> 24) == 0) {
+			return;
+		}
+		g.pose().pushMatrix();
+		g.pose().translate(x0, y0);
+		g.pose().rotate((float) Math.atan2(dy, dx));
+		g.pose().scale(length, thickness);
+		g.fill(0, 0, 1, 1, color);
+		g.pose().popMatrix();
+	}
+
 	public static void circle(GuiGraphicsExtractor g, float cx, float cy, float radius, int color) {
 		if (radius <= 0) {
 			return;

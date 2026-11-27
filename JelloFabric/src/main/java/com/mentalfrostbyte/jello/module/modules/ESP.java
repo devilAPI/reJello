@@ -10,6 +10,7 @@ import com.mentalfrostbyte.jello.setting.ModeValue;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 /** Simple 2D entity boxes, keyed by angle/distance instead of a full 3D projection. */
 public class ESP extends Module {
@@ -23,32 +24,44 @@ public class ESP extends Module {
 
 	@EventTarget
 	public void onRender(EventRender2D event) {
-		if (!isToggled() || mc.player == null || mc.level == null) {
+		if (!isToggled() || mc.player == null || mc.level == null || mc.gameRenderer == null) {
 			return;
 		}
-		float centerX = event.graphics.guiWidth() / 2f;
-		float centerY = event.graphics.guiHeight() / 2f;
+		float guiW = event.graphics.guiWidth();
+		float guiH = event.graphics.guiHeight();
 		for (Entity entity : mc.level.entitiesForRendering()) {
 			if (!(entity instanceof LivingEntity living) || entity == mc.player) {
 				continue;
 			}
 			double distance = mc.player.distanceTo(entity);
-			if (distance > 48) {
+			if (distance > 64) {
 				continue;
 			}
-			double dx = entity.getX() - mc.player.getX();
-			double dz = entity.getZ() - mc.player.getZ();
-			float angle = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90f;
-			float relative = angle - mc.player.getYRot();
-			double radians = Math.toRadians(relative);
-			float x = centerX + (float) Math.sin(radians) * (float) (220 / Math.max(1, distance / 8));
-			float y = centerY - (float) Math.cos(radians) * (float) (140 / Math.max(1, distance / 8));
-			float size = (float) Math.max(8, 60 / Math.max(1, distance / 8));
-			int color = living instanceof Player ? 0xAAFF5555 : 0xAA55FF55;
-			if (mode.is("Outline")) {
-				Render2D.rect(event.graphics, x - size, y - size, x + size, y + size, 0x66000000);
-			} else {
-				Render2D.rect(event.graphics, x - size, y - size, x + size, y + size, (color & 0x00FFFFFF) | 0x33000000);
+			Vec3 feet = mc.gameRenderer.projectPointToScreen(entity.position());
+			Vec3 head = mc.gameRenderer.projectPointToScreen(entity.position().add(0, entity.getBbHeight(), 0));
+			if (feet.z < -1 || feet.z > 1 || head.z < -1 || head.z > 1) {
+				continue;
+			}
+			float x = (float) ((feet.x * 0.5 + 0.5) * guiW);
+			float headY = (float) ((-head.y * 0.5 + 0.5) * guiH);
+			float feetY = (float) ((-feet.y * 0.5 + 0.5) * guiH);
+			float height = Math.max(8, Math.abs(feetY - headY));
+			float width = height * 0.55f;
+			float y = (headY + feetY) / 2f;
+			int color = living instanceof Player ? 0xFFFF5555 : 0xFF55FF55;
+			if (mode.is("Fill") || mode.is("2D") || mode.is("CSGO")) {
+				Render2D.rect(event.graphics, x - width / 2, y - height / 2, x + width / 2, y + height / 2,
+					(color & 0x00FFFFFF) | 0x33000000);
+			}
+			if (mode.is("Box") || mode.is("Outline") || mode.is("CSGO")) {
+				Render2D.rect(event.graphics, x - width / 2, y - height / 2, x + width / 2, y - height / 2 + 1.5f, color);
+				Render2D.rect(event.graphics, x - width / 2, y + height / 2 - 1.5f, x + width / 2, y + height / 2, color);
+				Render2D.rect(event.graphics, x - width / 2, y - height / 2, x - width / 2 + 1.5f, y + height / 2, color);
+				Render2D.rect(event.graphics, x + width / 2 - 1.5f, y - height / 2, x + width / 2, y + height / 2, color);
+			}
+			if (armor.getValue() && living instanceof Player) {
+				float armorY = y + height / 2 + 3;
+				Render2D.rect(event.graphics, x - width / 2, armorY, x + width / 2, armorY + 1.5f, 0x66000000);
 			}
 		}
 	}
