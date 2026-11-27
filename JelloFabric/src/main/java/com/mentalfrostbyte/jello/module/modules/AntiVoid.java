@@ -9,6 +9,8 @@ import net.minecraft.client.player.LocalPlayer;
 
 /** Catches the player before falling into the void. */
 public class AntiVoid extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final ModeValue mode = addValue(new ModeValue("Mode", "TPBack", "TPBack", "MovementFlag", "Jump"));
 	private final BooleanValue checkVoid = addValue(new BooleanValue("VoidCheck", true));
 	private final NumberValue jumpMotion = addValue(new NumberValue("Jump Motion", 3.0, 2.5, 3.5, 0.5));

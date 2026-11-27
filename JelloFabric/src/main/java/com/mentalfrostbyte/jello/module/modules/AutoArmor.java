@@ -2,6 +2,7 @@ package com.mentalfrostbyte.jello.module.modules;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import com.mentalfrostbyte.jello.setting.NumberValue;
 import com.mentalfrostbyte.jello.util.TimerUtil;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -25,6 +26,8 @@ import net.minecraft.world.item.equipment.Equippable;
  * The 1.8 version hard-coded numeric item ids; 26.x reads the equippable slot and armor attribute.
  */
 public class AutoArmor extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final TimerUtil timer = new TimerUtil();
 	private final NumberValue delay = addValue(new NumberValue("Delay", 40, 1, 500, 1));
 	public boolean bestarmor = true;

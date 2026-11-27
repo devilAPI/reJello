@@ -14,6 +14,8 @@ import net.minecraft.world.phys.Vec3;
 
 /** Simple 2D entity boxes, keyed by angle/distance instead of a full 3D projection. */
 public class ESP extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Fill", "Fill", "Box", "Outline", "2D", "CSGO"));
 	private final ModeValue colorMode = addValue(new ModeValue("ColorMode", "Health", "Health", "Team", "Custom", "Rainbow", "SigmaTest"));
 	private final BooleanValue armor = addValue(new BooleanValue("Armor", true));

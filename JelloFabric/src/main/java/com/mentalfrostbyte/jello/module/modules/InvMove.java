@@ -10,6 +10,8 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
 /** Lets movement keys work while a container or the ClickGUI is open. */
 public class InvMove extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Vanilla", "Vanilla", "NoPacket"));
 	public static boolean en;
 

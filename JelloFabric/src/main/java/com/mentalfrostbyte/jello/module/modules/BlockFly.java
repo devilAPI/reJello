@@ -25,6 +25,8 @@ import net.minecraft.world.phys.Vec3;
  * click is sent here.
  */
 public class BlockFly extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public static boolean isEnabled;
 	private final TimerUtil timer = new TimerUtil();
 	private final TimerUtil refillTimer = new TimerUtil();

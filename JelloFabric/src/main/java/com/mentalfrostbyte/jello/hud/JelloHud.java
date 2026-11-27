@@ -192,22 +192,23 @@ public class JelloHud {
 			Category category = tabgui.cats.get(tabgui.currentCategory);
 			List<Module> modules = Jello.getModulesInCategory(category);
 			int size = modules.size();
-			float smoothTrans = Anim.smooth(category.selectedTrans, category.lastSelectedTrans);
+			int visible = Math.min(8, size);
+			int start = size <= visible ? 0 : Math.max(0, Math.min(category.selectedIndex - visible / 2, size - visible));
+			float smoothTrans = Anim.smooth(category.selectedTrans, category.lastSelectedTrans) - start * 15f;
 			if (size != 0) {
-				Render2D.gradient(g, 85, 45, 170, 45 + 15 * size + 2.5f, top, bottom);
+				Render2D.gradient(g, 85, 45, 170, 45 + 15 * visible + 2.5f, top, bottom);
 				Render2D.imageUV(g, "tabguiselector", 85, 45 + smoothTrans, 85, 17.5f, 0, 0, 75, 17.5f, 75, 17.5f, -1);
 			}
-			int y = 0;
-			for (Module m : modules) {
-				if (y == 0) {
+			for (int row = 0; row < visible; row++) {
+				Module m = modules.get(start + row);
+				if (row == 0) {
 					Render2D.imageUV(g, "tabguishadow2", 80.5f, 40.5f, 94, 20, 0, 0, 94, 20, 94, 86, -1);
-				} else if (y == size - 1) {
-					Render2D.imageUV(g, "tabguishadow2", 80.5f, 40.5f + 15 * y + 5, 94, 20, 0, 64.5f, 94, 20, 94, 86, -1);
+				} else if (row == visible - 1) {
+					Render2D.imageUV(g, "tabguishadow2", 80.5f, 40.5f + 15 * row + 5, 94, 20, 0, 64.5f, 94, 20, 94, 86, -1);
 				} else {
-					Render2D.imageUV(g, "tabguishadow2", 80.5f, 40.5f + 15 * y + 5, 94, 15, 0, 30, 94, 15, 94, 86, -1);
+					Render2D.imageUV(g, "tabguishadow2", 80.5f, 40.5f + 15 * row + 5, 94, 15, 0, 30, 94, 15, 94, 86, -1);
 				}
-				(m.isToggled() ? Fonts.jelloFontBoldSmall : Fonts.jelloFontMarker).drawString(g, m.getName(), 85 + 5.5f, 45 + 15 * y + 5, -1);
-				y++;
+				(m.isToggled() ? Fonts.jelloFontBoldSmall : Fonts.jelloFontMarker).drawString(g, m.getName(), 85 + 5.5f, 45 + 15 * row + 5, -1);
 			}
 		}
 		if (!Float.isFinite(tabgui.seenTrans)) {

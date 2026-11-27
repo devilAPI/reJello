@@ -2,12 +2,15 @@ package com.mentalfrostbyte.jello.module.modules;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
 /** Teleports to the looked-at block on right click. */
 public class ClickTP extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public ClickTP() {
 		super("ClickTP", 0, Category.MOVEMENT);
 	}

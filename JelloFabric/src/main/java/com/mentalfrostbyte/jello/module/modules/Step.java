@@ -9,6 +9,8 @@ import com.mentalfrostbyte.jello.setting.ModeValue;
 
 /** 1.18 Step (NCP mode) on top of the 26.3 max-up-step hook. */
 public class Step extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public static boolean enabled;
 	private final ModeValue mode = addValue(new ModeValue("Mode", "NCP", "NCP"));
 	private double preY;

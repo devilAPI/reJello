@@ -8,6 +8,8 @@ import com.mentalfrostbyte.jello.setting.ModeValue;
 
 /** Removes the item-use slowdown (Delay/NCP/Matrix modes share the same 26.3 behaviour). */
 public class NoSlow extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public static boolean enabled;
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Delay", "Delay", "NCP", "Matrix"));
 

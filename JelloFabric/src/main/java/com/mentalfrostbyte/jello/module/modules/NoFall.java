@@ -8,6 +8,8 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 
 /** Tells the server the player is on the ground while falling. */
 public class NoFall extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Normal", "Normal", "Matrix", "Matrix2", "Verus", "OldHypixel"));
 
 	public NoFall() {

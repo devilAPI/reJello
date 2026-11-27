@@ -9,6 +9,8 @@ import net.minecraft.client.player.LocalPlayer;
 
 /** Creative-style flight with the Reborn setting set. */
 public class Fly extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Blocksmc", "Vanilla", "Verus", "Blocksmc", "Matrix", "MatrixNew",
 		"MatrixVertical", "BuzzShort", "ZoneCraft", "AAC4", "Vulcan", "NCP", "BlocksMC UnSafe", "ZoneCraft2", "Vulcan2.6.4"));
 	private final NumberValue flagTimes = addValue(new NumberValue("FlagTimes", 1, 1, 4, 1));

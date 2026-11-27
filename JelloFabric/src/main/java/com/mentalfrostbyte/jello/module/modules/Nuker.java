@@ -2,10 +2,13 @@ package com.mentalfrostbyte.jello.module.modules;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import com.mentalfrostbyte.jello.setting.NumberValue;
 
 /** Breaks the closest blocks inside the radius. */
 public class Nuker extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final NumberValue range = addValue(new NumberValue("Range", 1, 1, 6, 1));
 
 	public Nuker() {

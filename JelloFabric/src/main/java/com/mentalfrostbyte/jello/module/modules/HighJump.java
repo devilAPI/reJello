@@ -9,6 +9,8 @@ import net.minecraft.client.player.LocalPlayer;
 
 /** Jump boost with the Reborn modes. */
 public class HighJump extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public static boolean enabled;
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Vanilla", "Vanilla", "Watchdog A"));
 	private final BooleanValue silent = addValue(new BooleanValue("Silent Fly", true));

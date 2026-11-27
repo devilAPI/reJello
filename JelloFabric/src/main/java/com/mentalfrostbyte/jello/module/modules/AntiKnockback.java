@@ -12,6 +12,8 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 
 /** Cancels the knockback packets (explosions and the velocity packet). */
 public class AntiKnockback extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public static boolean isEnabled;
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Reverse", "Cancel", "Reverse", "MatrixSimple", "Spoof",
 		"MatrixReverse", "Normal", "Hypixel", "Legit", "MatrixAdvanced"));

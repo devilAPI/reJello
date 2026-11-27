@@ -2,12 +2,15 @@ package com.mentalfrostbyte.jello.module.modules;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import com.mentalfrostbyte.jello.setting.NumberValue;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /** Extends the entity/block interaction range attributes. */
 public class Reach extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final NumberValue reach = addValue(new NumberValue("Reach", 4.0, 3.0, 6.0, 0.1));
 	private double oldEntity = 3;
 	private double oldBlock = 3;

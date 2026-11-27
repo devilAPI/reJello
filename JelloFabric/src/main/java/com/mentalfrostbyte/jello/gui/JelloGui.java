@@ -55,6 +55,7 @@ public class JelloGui extends Screen {
 	public float lastOutro = 1;
 	public float settingsTrans;
 	public float lastSettingsTrans;
+	public int settingsPage;
 	public float scrollDelta;
 	/** True while the close animation runs after the screen has been dismissed. */
 	private boolean closing;
@@ -113,6 +114,7 @@ public class JelloGui extends Screen {
 		lastOutro = 1;
 		settingsTrans = 0;
 		lastSettingsTrans = 0;
+		settingsPage = 0;
 		selectedModule = null;
 		selectedCategory = null;
 		selectedValue = null;
@@ -328,6 +330,29 @@ public class JelloGui extends Screen {
 		return selectedModule != null && selectedModule.getValues().size() > 7 ? 2 : 1;
 	}
 
+	private int settingsPerPage() {
+		return popupColumns() == 2 ? 14 : 7;
+	}
+
+	private int settingsPageCount() {
+		if (selectedModule == null) {
+			return 1;
+		}
+		return Math.max(1, (selectedModule.getValues().size() + settingsPerPage() - 1) / settingsPerPage());
+	}
+
+	private int settingsStart() {
+		return Math.min(settingsPage * settingsPerPage(), selectedModule == null ? 0 : selectedModule.getValues().size());
+	}
+
+	private int settingsEnd() {
+		return Math.min(settingsStart() + settingsPerPage(), selectedModule == null ? 0 : selectedModule.getValues().size());
+	}
+
+	private void changeSettingsPage(int delta) {
+		settingsPage = Math.max(0, Math.min(settingsPageCount() - 1, settingsPage + delta));
+	}
+
 	private float popupWidth(float intro) {
 		return popupColumns() == 2 ? 380 : 200;
 	}
@@ -350,15 +375,22 @@ public class JelloGui extends Screen {
 		}
 		float width = popupWidth(intro);
 		int columns = popupColumns();
-		int rows = (selectedModule.getValues().size() + columns - 1) / columns;
+		int total = Math.max(1, settingsEnd() - settingsStart());
+		int rows = (total + columns - 1) / columns;
 		float height = HEADER_H + 10 + rows * 17 + 8;
 		float x = popupX(intro, width);
 		float y = popupY(height);
 		frame(g, x, y, width, height, intro);
 		Fonts.jelloFontAddAlt.drawString(g, selectedModule.getName(), x + 8, y + 8, themeText(false, intro));
+		if (settingsPageCount() > 1) {
+			Fonts.jelloFontGui.drawString(g, "< " + (settingsPage + 1) + "/" + settingsPageCount() + " >",
+				x + width - 62, y + 9, themeText(false, intro));
+		}
 
 		int index = 0;
-		for (Value value : selectedModule.getValues()) {
+		List<Value> values = selectedModule.getValues();
+		for (int vi = settingsStart(); vi < settingsEnd(); vi++) {
+			Value value = values.get(vi);
 			int column = index % columns;
 			int row = index / columns;
 			float colW = width / columns;
@@ -421,10 +453,23 @@ public class JelloGui extends Screen {
 		float width = popupWidth(intro);
 		float x = popupX(intro, width);
 		int columns = popupColumns();
-		int rows = (selectedModule.getValues().size() + columns - 1) / columns;
+		int total = Math.max(1, settingsEnd() - settingsStart());
+		int rows = (total + columns - 1) / columns;
 		float y = popupY(HEADER_H + 10 + rows * 17 + 8);
+		if (settingsPageCount() > 1 && mouseY >= y && mouseY <= y + HEADER_H) {
+			if (mouseX >= x + width - 70 && mouseX <= x + width - 34) {
+				changeSettingsPage(-1);
+				return true;
+			}
+			if (mouseX > x + width - 34 && mouseX <= x + width - 8) {
+				changeSettingsPage(1);
+				return true;
+			}
+		}
 		int index = 0;
-		for (Value value : selectedModule.getValues()) {
+		List<Value> values = selectedModule.getValues();
+		for (int vi = settingsStart(); vi < settingsEnd(); vi++) {
+			Value value = values.get(vi);
 			int column = index % columns;
 			int row = index / columns;
 			float colW = width / columns;
@@ -488,6 +533,10 @@ public class JelloGui extends Screen {
 		int vx = toVirtualX(x);
 		int vy = toVirtualY(y);
 		scrollDelta = (float) scrollY;
+		if (selectedModule != null && settingsPageCount() > 1) {
+			changeSettingsPage(scrollY > 0 ? 1 : -1);
+			return true;
+		}
 		layoutPanels();
 		for (Panel panel : panels) {
 			if (Render2D.hovering(panel.x, panel.y, PANEL_W, PANEL_H, vx, vy)) {
@@ -594,6 +643,7 @@ public class JelloGui extends Screen {
 					parent.exit = false;
 					parent.settingsTrans = 0;
 					parent.lastSettingsTrans = 0;
+					parent.settingsPage = 0;
 				}
 				return;
 			}

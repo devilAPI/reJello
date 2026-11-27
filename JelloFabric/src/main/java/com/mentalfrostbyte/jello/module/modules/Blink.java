@@ -4,6 +4,7 @@ import com.mentalfrostbyte.jello.event.EventTarget;
 import com.mentalfrostbyte.jello.event.events.EventPacketSent;
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import com.mentalfrostbyte.jello.setting.BooleanValue;
 import com.mentalfrostbyte.jello.setting.NumberValue;
 import com.mentalfrostbyte.jello.util.TimerUtil;
@@ -14,6 +15,8 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 
 /** Holds movement packets and flushes them on disable or on a pulse. */
 public class Blink extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final List<Packet<?>> packets = new ArrayList<>();
 	private final TimerUtil timer = new TimerUtil();
 	private final BooleanValue pulse = addValue(new BooleanValue("Pulse", false));

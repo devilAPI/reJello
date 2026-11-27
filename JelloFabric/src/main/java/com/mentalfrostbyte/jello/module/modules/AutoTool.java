@@ -2,6 +2,7 @@ package com.mentalfrostbyte.jello.module.modules;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -10,6 +11,8 @@ import net.minecraft.world.phys.HitResult;
 
 /** Selects the fastest hotbar tool for the block being mined. */
 public class AutoTool extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public AutoTool() {
 		super("AutoTool", 0, Category.PLAYER);
 	}

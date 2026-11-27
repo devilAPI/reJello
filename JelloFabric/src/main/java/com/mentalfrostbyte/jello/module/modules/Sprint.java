@@ -8,6 +8,8 @@ import net.minecraft.client.player.LocalPlayer;
 
 /** Sigma Reborn Sprint: keeps the player sprinting according to the selected mode. */
 public class Sprint extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final ModeValue sprintMode = addValue(new ModeValue("OmniSprint", "Old", "Old", "New", "NewOmni"));
 	public static boolean scb;
 

@@ -11,6 +11,8 @@ import com.mentalfrostbyte.jello.util.PlayerUtil;
 
 /** Horizontal speed multiplier. The mode only changes the flavour text in the 1.18 build. */
 public class Speed extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final NumberValue speed = addValue(new NumberValue("Speed", 1.0, 0.1, 20.0, 0.1));
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Vanilla", "Vanilla", "MatrixSemiStrafe", "MatrixTimerBalance",
 		"MatrixMultiply", "MatrixDynamic", "Strafe", "MatrixLow", "BuzzSlow", "NCP", "BlocksMC"));

@@ -4,6 +4,7 @@ import com.mentalfrostbyte.jello.event.EventTarget;
 import com.mentalfrostbyte.jello.event.events.EventRender2D;
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import com.mentalfrostbyte.jello.render.Render2D;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -11,6 +12,8 @@ import net.minecraft.world.phys.Vec3;
 
 /** 2D tracers from the crosshair toward nearby players. */
 public class Tracers extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public Tracers() {
 		super("Tracers", 0, Category.RENDER);
 	}

@@ -12,6 +12,8 @@ import net.minecraft.client.player.LocalPlayer;
 
 /** The 1.8 "jump and glide": a long forward jump with a fixed air speed. */
 public class LongJump extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public static boolean enabled;
 	public static float stage;
 	private boolean wasOnGround;

@@ -9,6 +9,8 @@ import net.minecraft.client.player.LocalPlayer;
 
 /** Critical-hit packet modes. */
 public class Criticals extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	private final ModeValue mode = addValue(new ModeValue("Mode", "Packet", "Packet", "Jump", "PacketLegit", "MatrixSemi"));
 
 	public Criticals() {

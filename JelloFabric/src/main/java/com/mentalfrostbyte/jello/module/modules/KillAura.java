@@ -23,6 +23,8 @@ import net.minecraft.world.phys.Vec3;
 
 /** Attack aura, ported from Sigma Reborn 1.18 with its setting set. */
 public class KillAura extends Module {
+	/** Meteor Client variant selector. */
+	private final ModeValue source = addValue(new ModeValue("Source", "Sigma", "Sigma", "Meteor"));
 	public static boolean enabled;
 	public static boolean attacking;
 	public static LivingEntity target;
