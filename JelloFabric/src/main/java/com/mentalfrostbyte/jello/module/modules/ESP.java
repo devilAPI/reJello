@@ -33,6 +33,10 @@ public class ESP extends Module {
 			if (!(entity instanceof LivingEntity living) || entity == mc.player) {
 				continue;
 			}
+			// Players and hostile mobs only: fish/sheep boxes made the overlay unreadable.
+			if (!(living instanceof Player) && !(living instanceof net.minecraft.world.entity.monster.Monster)) {
+				continue;
+			}
 			double distance = mc.player.distanceTo(entity);
 			if (distance > 64) {
 				continue;
@@ -49,15 +53,27 @@ public class ESP extends Module {
 			float width = height * 0.55f;
 			float y = (headY + feetY) / 2f;
 			int color = living instanceof Player ? 0xFFFF5555 : 0xFF55FF55;
-			if (mode.is("Fill") || mode.is("2D") || mode.is("CSGO")) {
-				Render2D.rect(event.graphics, x - width / 2, y - height / 2, x + width / 2, y + height / 2,
-					(color & 0x00FFFFFF) | 0x33000000);
+			float x0 = x - width / 2, x1 = x + width / 2;
+			float y0 = y - height / 2, y1 = y + height / 2;
+			if (mode.is("Fill") || mode.is("2D")) {
+				Render2D.rect(event.graphics, x0, y0, x1, y1, (color & 0x00FFFFFF) | 0x33000000);
 			}
-			if (mode.is("Box") || mode.is("Outline") || mode.is("CSGO")) {
-				Render2D.rect(event.graphics, x - width / 2, y - height / 2, x + width / 2, y - height / 2 + 1.5f, color);
-				Render2D.rect(event.graphics, x - width / 2, y + height / 2 - 1.5f, x + width / 2, y + height / 2, color);
-				Render2D.rect(event.graphics, x - width / 2, y - height / 2, x - width / 2 + 1.5f, y + height / 2, color);
-				Render2D.rect(event.graphics, x + width / 2 - 1.5f, y - height / 2, x + width / 2, y + height / 2, color);
+			if (mode.is("Box") || mode.is("Outline") || mode.is("2D")) {
+				Render2D.rect(event.graphics, x0, y0, x1, y0 + 1.5f, color);
+				Render2D.rect(event.graphics, x0, y1 - 1.5f, x1, y1, color);
+				Render2D.rect(event.graphics, x0, y0, x0 + 1.5f, y1, color);
+				Render2D.rect(event.graphics, x1 - 1.5f, y0, x1, y1, color);
+			}
+			if (mode.is("CSGO")) {
+				float corner = Math.min(7, width / 3);
+				Render2D.rect(event.graphics, x0, y0, x0 + corner, y0 + 1.5f, color);
+				Render2D.rect(event.graphics, x0, y0, x0 + 1.5f, y0 + corner, color);
+				Render2D.rect(event.graphics, x1 - corner, y0, x1, y0 + 1.5f, color);
+				Render2D.rect(event.graphics, x1 - 1.5f, y0, x1, y0 + corner, color);
+				Render2D.rect(event.graphics, x0, y1 - 1.5f, x0 + corner, y1, color);
+				Render2D.rect(event.graphics, x0, y1 - corner, x0 + 1.5f, y1, color);
+				Render2D.rect(event.graphics, x1 - corner, y1 - 1.5f, x1, y1, color);
+				Render2D.rect(event.graphics, x1 - 1.5f, y1 - corner, x1, y1, color);
 			}
 			if (armor.getValue() && living instanceof Player) {
 				float armorY = y + height / 2 + 3;

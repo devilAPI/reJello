@@ -26,6 +26,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /** The in-game Jello overlay (GuiIngame hook in 1.8). */
 public class JelloHud {
+	private static final float KEY_X = 85;
+	private static final float KEY_Y = 135;
 	private final Minecraft mc = Minecraft.getInstance();
 	private final TimerUtil sampleTimer = new TimerUtil();
 	/** 0/1 TabGUI top-left/right, 2/3 TabGUI bottom-left/right, 4/5 notification top/bottom. */
@@ -41,32 +43,27 @@ public class JelloHud {
 		EventManager.register(this);
 	}
 
-	private int miniMapOffset() {
-		return Jello.isEnabled("MiniMap") ? 75 + 8 : 0;
-	}
-
 	@EventTarget
 	public void onKey(EventKeyPressed e) {
-		int y = miniMapOffset();
 		InputConstants.Key key = e.getKey();
 		var o = mc.options;
 		if (matches(o.keyUp, key)) {
-			w.addCircle(85 / 2f, 284 / 2f + y, 26, 5, o.keyUp, false);
+			w.addCircle(KEY_X + 37.5f, KEY_Y + 12, 26, 5, o.keyUp, false);
 		}
 		if (matches(o.keyLeft, key)) {
-			a.addCircle(34 / 2f, 334 / 2f + y, 26, 5, o.keyLeft, false);
+			a.addCircle(KEY_X + 12, KEY_Y + 37.5f, 26, 5, o.keyLeft, false);
 		}
 		if (matches(o.keyDown, key)) {
-			s.addCircle(85 / 2f, 334 / 2f + y, 26, 5, o.keyDown, false);
+			s.addCircle(KEY_X + 37.5f, KEY_Y + 37.5f, 26, 5, o.keyDown, false);
 		}
 		if (matches(o.keyRight, key)) {
-			d.addCircle(136 / 2f, 334 / 2f + y, 26, 5, o.keyRight, false);
+			d.addCircle(KEY_X + 63, KEY_Y + 37.5f, 26, 5, o.keyRight, false);
 		}
 		if (matches(o.keyAttack, key)) {
-			l.addCircle(47 / 2f, 386 / 2f + y, 35, 5, o.keyAttack, true);
+			l.addCircle(KEY_X + 18.5f, KEY_Y + 63, 35, 5, o.keyAttack, true);
 		}
 		if (matches(o.keyUse, key)) {
-			r.addCircle(124 / 2f, 386 / 2f + y, 35, 5, o.keyUse, true);
+			r.addCircle(KEY_X + 56.5f, KEY_Y + 63, 35, 5, o.keyUse, true);
 		}
 	}
 
@@ -147,42 +144,34 @@ public class JelloHud {
 	}
 
 	private void renderHud(GuiGraphicsExtractor g) {
-		// The 1.8 HUD was designed for a ~480x260 GUI. At higher GUI scales it has to shrink,
-		// otherwise the seven-category TabGUI, minimap and keystrokes overlap each other.
-		float hudScale = Math.min(1f, Math.max(0.45f, (g.guiHeight() - 8) / 330f));
-		g.pose().pushMatrix();
-		g.pose().scale(hudScale, hudScale);
 		Render2D.image(g, "jello", -0.5f, -0.5f, 86, 49);
 		boolean tab = Jello.isEnabled("TabGUI");
 		if (tab) {
 			// The Reborn tab shadow only covered five categories; stretch it over all seven.
 			Render2D.image(g, "tabguishadow", 0.5f, 40.5f, 84, Jello.tabgui.cats.size() * 15 + 6);
 		}
-		int yOff = 0;
 		if (Jello.isEnabled("MiniMap")) {
-			Render2D.image(g, "minimap", 0.5f, 251 / 2f, 84, 84);
-			miniMap.render(g, 5, 130, 75);
-			yOff += 75 + 8;
+			// The minimap moved next to the seven-category TabGUI instead of overlapping it.
+			Render2D.image(g, "minimap", 84.5f, 44.5f, 84, 84);
+			miniMap.render(g, 89, 49, 75);
 		}
 		if (Jello.isEnabled("KeyStrokes")) {
-			renderKeyStrokes(g, yOff);
-			yOff += 100;
+			renderKeyStrokes(g);
 		}
 		if (tab) {
 			renderTabGui(g);
 		}
-		g.pose().popMatrix();
 	}
 
-	private void renderKeyStrokes(GuiGraphicsExtractor g, int yOff) {
-		Render2D.image(g, "keystrokes", 0.5f - 1, 251 / 2f - 1 + yOff, 86, 86);
-		int kx = 5, ky = 130;
-		key(g, w, kx + 25.5f, ky + yOff, kx + 49.5f, ky + 24 + yOff);
-		key(g, a, kx, ky + 25.5f + yOff, kx + 24, ky + 49.5f + yOff);
-		key(g, s, kx + 25.5f, ky + 25.5f + yOff, kx + 49.5f, ky + 49.5f + yOff);
-		key(g, d, kx + 51, ky + 25.5f + yOff, kx + 75, ky + 49.5f + yOff);
-		key(g, l, kx, ky + 51 + yOff, kx + 37, ky + 75 + yOff);
-		key(g, r, kx + 38.5f, ky + 51 + yOff, kx + 75, ky + 75 + yOff);
+	private void renderKeyStrokes(GuiGraphicsExtractor g) {
+		float kx = KEY_X, ky = KEY_Y;
+		Render2D.image(g, "keystrokes", kx - 1, ky - 1, 86, 86);
+		key(g, w, kx + 25.5f, ky + 0.5f, kx + 49.5f, ky + 24.5f);
+		key(g, a, kx + 0.5f, ky + 25.5f, kx + 24.5f, ky + 49.5f);
+		key(g, s, kx + 25.5f, ky + 25.5f, kx + 49.5f, ky + 49.5f);
+		key(g, d, kx + 51f, ky + 25.5f, kx + 75f, ky + 49.5f);
+		key(g, l, kx + 0.5f, ky + 51f, kx + 37f, ky + 75f);
+		key(g, r, kx + 38.5f, ky + 51f, kx + 75f, ky + 75f);
 	}
 
 	/** The 1.8 code used a stencil of the key rectangle; a scissor does the same for these axis-aligned keys. */

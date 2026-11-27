@@ -32,11 +32,11 @@ public class JelloGui extends Screen {
 	private static final float PANEL_W = 100;
 	private static final float HEADER_H = 25;
 	private static final float ROW_H = 15;
-	private static final float PANEL_H = 150;
+	private static final float PANEL_H = 100;
+	private static final float LIST_H = PANEL_H - 25 - 10;
 	private static final float BORDER = 9.5f;
-	private static final float VIRTUAL_W = 490;
-	private static final float VIRTUAL_H = 210;
-	private static final int PAGE_SIZE = 4;
+	private static final float VIRTUAL_W = 480;
+	private static final float VIRTUAL_H = 240;
 	private static final float PANEL_GAP = 19;
 
 	private final Minecraft mc = Minecraft.getInstance();
@@ -56,7 +56,6 @@ public class JelloGui extends Screen {
 	public float settingsTrans;
 	public float lastSettingsTrans;
 	public float scrollDelta;
-	public int page;
 	/** True while the close animation runs after the screen has been dismissed. */
 	private boolean closing;
 	/** True once the screen has actually been shown; prevents the close animation from running at startup. */
@@ -84,6 +83,23 @@ public class JelloGui extends Screen {
 	@Override
 	public boolean isInGameUi() {
 		return minecraft != null && minecraft.level != null;
+	}
+
+	@Override
+	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+		if (minecraft == null || minecraft.level == null) {
+			super.extractBackground(g, mouseX, mouseY, partialTick);
+			return;
+		}
+		if (blurEnabled()) {
+			try {
+				g.blurBeforeThisStratum();
+			} catch (IllegalStateException ignored) {
+				// One blur per frame; the vanilla menu background may already have queued it.
+			}
+		}
+		g.fillGradient(0, 0, width, height, Render2D.color(0, 0, 0, 0.35f), Render2D.color(0, 0, 0, 0.50f));
+		extractMenuBackground(g);
 	}
 
 	@Override
@@ -182,6 +198,14 @@ public class JelloGui extends Screen {
 		return !(value instanceof ModeValue mode) || mode.is("Center");
 	}
 
+	private static boolean blurEnabled() {
+		Module menu = Jello.getModule("Menu");
+		Module clickGui = Jello.getModule("ClickGUI");
+		Value blur = menu == null ? null : menu.getValue("Blur");
+		Value clickBlur = clickGui == null ? null : clickGui.getValue("Blur");
+		return (blur instanceof BooleanValue b && b.getValue()) || (clickBlur instanceof BooleanValue c && c.getValue());
+	}
+
 	private static boolean particlesEnabled() {
 		Module module = Jello.getModule("ClickGUI");
 		Value value = module == null ? null : module.getValue("Particles");
@@ -237,19 +261,6 @@ public class JelloGui extends Screen {
 		this.mouseX = toVirtualX(mouseX);
 		this.mouseY = toVirtualY(mouseY);
 		scrollDelta = 0;
-		Module menu = Jello.getModule("Menu");
-		Module clickGui = Jello.getModule("ClickGUI");
-		Value blur = menu == null ? null : menu.getValue("Blur");
-		Value clickBlur = clickGui == null ? null : clickGui.getValue("Blur");
-		if ((blur instanceof BooleanValue b && b.getValue()) || (clickBlur instanceof BooleanValue c && c.getValue())) {
-			try {
-				g.blurBeforeThisStratum();
-			} catch (IllegalStateException ignored) {
-				// The vanilla background may already have queued the single blur allowed per frame.
-			}
-		}
-		// A soft dark backdrop makes the panels readable on bright terrain even if the blur is a no-op.
-		g.fill(0, 0, g.guiWidth(), g.guiHeight(), Render2D.color(0, 0, 0, 0.35f));
 		// The intro starts at 1.23; clamping to 1 keeps the canvas inside small windows.
 		if (selectedModule != null && selectedCategory != null && settingsTrans > 0.001f) {
 			float intro = Anim.smooth(settingsTrans, lastSettingsTrans);
@@ -286,59 +297,30 @@ public class JelloGui extends Screen {
 		g.pose().scale(scale, scale);
 		g.pose().translate(-VIRTUAL_W / 2f, -VIRTUAL_H / 2f);
 		layoutPanels();
-		for (int i = pageStart(); i < pageEnd(); i++) {
-			panels.get(i).draw(g, -1000, -1000, alpha);
+		for (Panel panel : panels) {
+			panel.draw(g, -1000, -1000, alpha);
 		}
 		g.pose().popMatrix();
 	}
 
-	public int pageCount() {
-		return Math.max(1, (panels.size() + PAGE_SIZE - 1) / PAGE_SIZE);
-	}
-
-	private int pageStart() {
-		return page * PAGE_SIZE;
-	}
-
-	private int pageEnd() {
-		return Math.min(panels.size(), pageStart() + PAGE_SIZE);
-	}
-
 	private void layoutPanels() {
-		int start = pageStart();
-		int count = pageEnd() - start;
-		float width = count * PANEL_W + Math.max(0, count - 1) * PANEL_GAP;
-		float startX = (VIRTUAL_W - width) / 2f;
-		for (int i = 0; i < count; i++) {
-			Panel panel = panels.get(start + i);
+		for (int i = 0; i < panels.size(); i++) {
+			Panel panel = panels.get(i);
 			if (!panel.dragging) {
-				panel.x = startX + i * (PANEL_W + PANEL_GAP);
-				panel.y = 10;
+				panel.x = 2 + (i % 4) * (PANEL_W + PANEL_GAP);
+				panel.y = 2 + (i / 4) * 114;
 			}
 		}
 	}
 
-	private void changePage(int delta) {
-		page = Math.max(0, Math.min(pageCount() - 1, page + delta));
-		selectedModule = null;
-		selectedCategory = null;
-		exit = false;
-		layoutPanels();
-	}
-
 	private void drawPanels(GuiGraphicsExtractor g, int mouseX, int mouseY) {
 		layoutPanels();
-		for (int i = pageStart(); i < pageEnd(); i++) {
-			Panel panel = panels.get(i);
+		for (Panel panel : panels) {
 			if (panel.dragging) {
 				panel.x = panel.lastX + mouseX - panel.startX;
 				panel.y = panel.lastY + mouseY - panel.startY;
 			}
 			panel.draw(g, mouseX, mouseY, 1f);
-		}
-		if (pageCount() > 1) {
-			Fonts.jelloFontGui.drawCenteredString(g, "<  " + (page + 1) + " / " + pageCount() + "  >",
-				VIRTUAL_W / 2f, VIRTUAL_H - 16, isDark() ? 0xFFFFFFFF : 0xFF404040);
 		}
 	}
 
@@ -421,19 +403,6 @@ public class JelloGui extends Screen {
 		mouseY = toVirtualY(event.y());
 		selectedValue = null;
 		layoutPanels();
-		if (selectedModule == null && pageCount() > 1 && mouseY >= VIRTUAL_H - 20) {
-			float middle = VIRTUAL_W / 2f;
-			if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
-				if (mouseX < middle - 12) {
-					changePage(-1);
-					return true;
-				}
-				if (mouseX > middle + 12) {
-					changePage(1);
-					return true;
-				}
-			}
-		}
 		if (selectedModule != null && selectedCategory != null) {
 			if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT && handlePopupClick()) {
 				return true;
@@ -441,8 +410,8 @@ public class JelloGui extends Screen {
 			// Clicking another panel while the popup is open closes it and still selects the clicked module.
 			exit = true;
 		}
-		for (int i = pageStart(); i < pageEnd(); i++) {
-			panels.get(i).mouseClicked(event.button(), this);
+		for (Panel panel : panels) {
+			panel.mouseClicked(event.button(), this);
 		}
 		return true;
 	}
@@ -520,16 +489,10 @@ public class JelloGui extends Screen {
 		int vy = toVirtualY(y);
 		scrollDelta = (float) scrollY;
 		layoutPanels();
-		boolean overPanel = false;
-		for (int i = pageStart(); i < pageEnd(); i++) {
-			Panel panel = panels.get(i);
+		for (Panel panel : panels) {
 			if (Render2D.hovering(panel.x, panel.y, PANEL_W, PANEL_H, vx, vy)) {
 				panel.onScroll((float) scrollY, vx, vy);
-				overPanel = true;
 			}
-		}
-		if (!overPanel && pageCount() > 1) {
-			changePage(scrollY > 0 ? 1 : -1);
 		}
 		return true;
 	}
@@ -542,14 +505,6 @@ public class JelloGui extends Screen {
 			} else {
 				onClose();
 			}
-			return true;
-		}
-		if (event.key() == com.mojang.blaze3d.platform.InputConstants.KEY_LEFT && selectedModule == null) {
-			changePage(-1);
-			return true;
-		}
-		if (event.key() == com.mojang.blaze3d.platform.InputConstants.KEY_RIGHT && selectedModule == null) {
-			changePage(1);
 			return true;
 		}
 		return super.keyPressed(event);
@@ -602,12 +557,12 @@ public class JelloGui extends Screen {
 				return false;
 			}
 			return Render2D.hovering(x, y + HEADER_H + index * ROW_H - scroll, PANEL_W, ROW_H, mx, my)
-				&& Render2D.hovering2(x, y + HEADER_H, x + PANEL_W, y + HEADER_H + 110, mx, my);
+				&& Render2D.hovering2(x, y + HEADER_H, x + PANEL_W, y + HEADER_H + LIST_H, mx, my);
 		}
 
 		public void onScroll(float delta, int mx, int my) {
 			List<Module> modules = Jello.getModulesInCategory(category);
-			float max = Math.max(0, modules.size() * ROW_H - 110);
+			float max = Math.max(0, modules.size() * ROW_H - LIST_H);
 			if (!Render2D.hovering(x, y, PANEL_W, PANEL_H, mx, my) || max <= 0) {
 				return;
 			}
@@ -652,7 +607,7 @@ public class JelloGui extends Screen {
 				Fonts.jelloFontAddAlt.drawString(g, category.name, x + 10, y + 8, headerText(alpha));
 			}
 			List<Module> modules = Jello.getModulesInCategory(category);
-			Render2D.scissor(g, x, y + HEADER_H, x + PANEL_W, y + HEADER_H + 110);
+			Render2D.scissor(g, x, y + HEADER_H, x + PANEL_W, y + HEADER_H + LIST_H);
 			for (int i = 0; i < modules.size(); i++) {
 				Module module = modules.get(i);
 				float rowY = y + HEADER_H + i * ROW_H - Anim.smooth(scroll, lastScroll);
@@ -672,10 +627,10 @@ public class JelloGui extends Screen {
 			}
 			g.disableScissor();
 			if (scrollFade > 0.01f) {
-				float max = Math.max(1, modules.size() * ROW_H - 110);
-				float barHeight = 110 * (110 / (modules.size() * ROW_H + 1));
-				float barY = y + HEADER_H + (110 - barHeight) * (scroll / max);
-				Render2D.rect(g, x + PANEL_W - 5, y + HEADER_H, x + PANEL_W - 3.5f, y + HEADER_H + 110,
+				float max = Math.max(1, modules.size() * ROW_H - LIST_H);
+				float barHeight = LIST_H * (LIST_H / (modules.size() * ROW_H + 1));
+				float barY = y + HEADER_H + (LIST_H - barHeight) * (scroll / max);
+				Render2D.rect(g, x + PANEL_W - 5, y + HEADER_H, x + PANEL_W - 3.5f, y + HEADER_H + LIST_H,
 					isDark() ? Render2D.color(1, 1, 1, 0.10f * scrollFade * alpha) : Render2D.color(0, 0, 0, 0.10f * scrollFade * alpha));
 				Render2D.rect(g, x + PANEL_W - 5, barY, x + PANEL_W - 3.5f, barY + barHeight,
 					Render2D.color(0x3B / 255f, 0x99 / 255f, 0xFC / 255f, 0.8f * scrollFade * alpha));

@@ -1,1 +1,1 @@
-{"providers": [{"type": "ttf", "file": "jello:jellolight.ttf", "size": 9.5, "oversample": 4.0, "shift": [0.0, 0.125]}]}
+{"providers": [{"type": "ttf", "file": "jello:jellolight.ttf", "size": 9.5, "oversample": 6.0, "shift": [0.0, 0.125]}]}

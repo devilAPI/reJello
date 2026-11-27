@@ -23,7 +23,7 @@ public class Tracers extends Module {
 		float centerX = event.graphics.guiWidth() / 2f;
 		float centerY = event.graphics.guiHeight() / 2f;
 		for (Entity entity : mc.level.entitiesForRendering()) {
-			if (!(entity instanceof LivingEntity) || entity == mc.player) {
+			if (!(entity instanceof net.minecraft.world.entity.player.Player) || entity == mc.player) {
 				continue;
 			}
 			if (mc.player.distanceTo(entity) > 64) {
