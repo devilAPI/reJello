@@ -1,37 +1,48 @@
 package com.mentalfrostbyte.jello.module.meteor;
 
+import com.mentalfrostbyte.jello.event.EventTarget;
+import com.mentalfrostbyte.jello.event.events.EventRender2D;
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
-import com.mentalfrostbyte.jello.setting.BooleanValue;
-import com.mentalfrostbyte.jello.setting.ModeValue;
+import com.mentalfrostbyte.jello.render.Fonts;
 import com.mentalfrostbyte.jello.setting.NumberValue;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
-/** Meteor Client module (Nametags). Behaviour port pending. */
+/** Meteor Client nametags: projected player names and health. */
 public class Nametags extends Module {
-	private final NumberValue value1 = addValue(new NumberValue("scale", 1.1, 0.1, 100, 0.1));
-	private final BooleanValue value2 = addValue(new BooleanValue("ignore-self", true));
-	private final BooleanValue value3 = addValue(new BooleanValue("ignore-friends", false));
-	private final BooleanValue value4 = addValue(new BooleanValue("ignore-bots", true));
-	private final BooleanValue value5 = addValue(new BooleanValue("culling", false));
-	private final NumberValue value6 = addValue(new NumberValue("culling-range", 20.0, 0.0, 100, 0.1));
-	private final NumberValue value7 = addValue(new NumberValue("culling-count", 50, 1, 100, 1));
-	private final BooleanValue value8 = addValue(new BooleanValue("health", true));
-	private final BooleanValue value9 = addValue(new BooleanValue("use-display-name", false));
-	private final BooleanValue value10 = addValue(new BooleanValue("gamemode", false));
-	private final BooleanValue value11 = addValue(new BooleanValue("distance", false));
-	private final BooleanValue value12 = addValue(new BooleanValue("ping", true));
-	private final BooleanValue value13 = addValue(new BooleanValue("items", true));
-	private final NumberValue value14 = addValue(new NumberValue("item-spacing", 2.0, 0.0, 10.0, 0.1));
-	private final BooleanValue value15 = addValue(new BooleanValue("ignore-empty-slots", true));
-	private final ModeValue value16 = addValue(new ModeValue("durability", "None", "None", "N", "T", "P"));
-	private final BooleanValue value17 = addValue(new BooleanValue("display-enchants", false));
-	private final ModeValue value18 = addValue(new ModeValue("enchantment-position", "Above", "Above", "A", "O"));
-	private final NumberValue value19 = addValue(new NumberValue("enchant-name-length", 3, 1, 5, 1));
-	private final NumberValue value20 = addValue(new NumberValue("enchant-text-scale", 1.0, 0.1, 2.0, 0.1));
-	private final BooleanValue value21 = addValue(new BooleanValue("show-count", true));
-	private final ModeValue value22 = addValue(new ModeValue("distance-color-mode", "Gradient", "Gradient", "G", "F"));
+	private final NumberValue range = addValue(new NumberValue("Range", 64, 8, 256, 8));
+	private final NumberValue scale = addValue(new NumberValue("Scale", 1.0, 0.5, 2.0, 0.1));
 
 	public Nametags() {
 		super("Nametags", 0, Category.RENDER);
+	}
+
+	@EventTarget
+	public void onRender(EventRender2D event) {
+		if (!isToggled() || mc.player == null || mc.level == null) {
+			return;
+		}
+		for (Player player : mc.level.players()) {
+			if (player == mc.player || player.isInvisible()) {
+				continue;
+			}
+			double distance = mc.player.distanceTo(player);
+			if (distance > range.getValue()) {
+				continue;
+			}
+			Vec3 head = mc.gameRenderer.projectPointToScreen(player.position().add(0, player.getBbHeight() + 0.4, 0));
+			if (head.z < -1 || head.z > 1) {
+				continue;
+			}
+			float x = (float) ((head.x * 0.5 + 0.5) * event.graphics.guiWidth());
+			float y = (float) ((-head.y * 0.5 + 0.5) * event.graphics.guiHeight());
+			String text = player.getName().getString() + " " + Math.round(player.getHealth());
+			Fonts.jelloFont.drawCenteredString(event.graphics, text, x, y, 0xFFFFFFFF);
+			float health = Math.max(0, player.getHealth() / player.getMaxHealth());
+			com.mentalfrostbyte.jello.render.Render2D.rect(event.graphics, x - 20, y + 10, x + 20, y + 12, 0x88000000);
+			com.mentalfrostbyte.jello.render.Render2D.rect(event.graphics, x - 20, y + 10, x - 20 + 40 * health, y + 12,
+				com.mentalfrostbyte.jello.render.Render2D.color(1f, 0.2f, 0.2f, 0.9f));
+		}
 	}
 }

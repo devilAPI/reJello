@@ -2,19 +2,29 @@ package com.mentalfrostbyte.jello.module.meteor;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
-import com.mentalfrostbyte.jello.setting.BooleanValue;
 import com.mentalfrostbyte.jello.setting.NumberValue;
 
-/** Meteor Client module (Zoom). Behaviour port pending. */
+/** Meteor Client zoom. */
 public class Zoom extends Module {
-	private final NumberValue value1 = addValue(new NumberValue("zoom", 6.0, 1.0, 100, 0.1));
-	private final NumberValue value2 = addValue(new NumberValue("scroll-sensitivity", 1.0, 0.0, 100, 0.1));
-	private final BooleanValue value3 = addValue(new BooleanValue("smooth", true));
-	private final BooleanValue value4 = addValue(new BooleanValue("cinematic", false));
-	private final BooleanValue value5 = addValue(new BooleanValue("hide-HUD", false));
-	private final BooleanValue value6 = addValue(new BooleanValue("show-hands", false));
+	private final NumberValue level = addValue(new NumberValue("Zoom Level", 4.0, 1.5, 10.0, 0.5));
+	private int previousFov;
 
 	public Zoom() {
 		super("Zoom", 0, Category.RENDER);
+	}
+
+	@Override
+	public void onEnable() {
+		if (mc.options != null) {
+			previousFov = mc.options.fov().get();
+			mc.options.fov().set((int) Math.max(10, previousFov / level.getValue()));
+		}
+	}
+
+	@Override
+	public void onDisable() {
+		if (mc.options != null) {
+			mc.options.fov().set(previousFov);
+		}
 	}
 }

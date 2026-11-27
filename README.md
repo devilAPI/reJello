@@ -48,6 +48,10 @@ WorldTime, Test
 The ClickGUI, HUD (logo, TabGUI, KeyStrokes, mini map, compass, active-module list, notifications),
 TTF fonts, dot commands, mode/boolean/number settings and the offline alt manager are included.
 
+Meteor behaviour is being filled in batches. The first functional Meteor batch is: Auto Totem, Auto Eat,
+Auto Gap, Auto Walk, Air Jump, Auto Jump, Parkour, Safe Walk, Spider, Auto Weapon, Nametags, Zoom,
+Break Delay, Middle Click Extra and Weather Changer.
+
 ## Commands
 
 | Command | Description |
