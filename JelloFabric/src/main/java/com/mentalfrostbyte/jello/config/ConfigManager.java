@@ -3,6 +3,7 @@ package com.mentalfrostbyte.jello.config;
 import com.mentalfrostbyte.jello.Jello;
 import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.setting.BooleanValue;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import com.mentalfrostbyte.jello.setting.NumberValue;
 import com.mentalfrostbyte.jello.setting.Value;
 import java.io.IOException;
@@ -64,6 +65,8 @@ public final class ConfigManager {
 							b.set(Boolean.parseBoolean(split[2]));
 						} else if (v instanceof NumberValue n) {
 							n.setVal(Double.parseDouble(split[2]));
+						} else if (v instanceof ModeValue mode) {
+							mode.setMode(split[2]);
 						}
 					} catch (NumberFormatException ignored) {
 					}
@@ -84,6 +87,8 @@ public final class ConfigManager {
 					settings.add(m.getName() + ":" + b.getName() + ":" + b.isEnabled());
 				} else if (v instanceof NumberValue n) {
 					settings.add(m.getName() + ":" + n.getName() + ":" + n.getValue());
+				} else if (v instanceof ModeValue mode) {
+					settings.add(m.getName() + ":" + mode.getName() + ":" + mode.getMode());
 				}
 			}
 		}

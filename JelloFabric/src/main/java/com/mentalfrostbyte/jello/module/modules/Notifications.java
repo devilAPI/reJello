@@ -1,5 +1,6 @@
 package com.mentalfrostbyte.jello.module.modules;
 
+import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
 import com.mojang.blaze3d.platform.InputConstants;
 
@@ -8,7 +9,7 @@ public class Notifications extends Module {
 	public static boolean enabled;
 
 	public Notifications() {
-		super("Notifications", 0, null);
+		super("Notifications", 0, Category.RENDER);
 	}
 
 	@Override

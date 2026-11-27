@@ -2,19 +2,21 @@ package com.mentalfrostbyte.jello.mixin;
 
 import com.mentalfrostbyte.jello.event.EventManager;
 import com.mentalfrostbyte.jello.event.events.EventPacketSent;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
 import net.minecraft.network.protocol.Packet;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-/** Fires {@link EventPacketSent}; a listener can swap the outgoing packet (KillAura's smoothed rotations). */
+/** Fires {@link EventPacketSent}; listeners can replace or drop an outgoing packet (Blink, KillAura rotations). */
 @Mixin(ClientCommonPacketListenerImpl.class)
 public class ClientCommonPacketListenerImplMixin {
-	@ModifyVariable(method = "send", at = @At("HEAD"), argsOnly = true)
-	private Packet<?> jello$send(Packet<?> packet) {
+	@WrapMethod(method = "send")
+	private void jello$send(Packet<?> packet, Operation<Void> original) {
 		EventPacketSent e = new EventPacketSent(packet);
 		EventManager.call(e);
-		return e.getPacket();
+		if (!e.isCancelled()) {
+			original.call(e.getPacket());
+		}
 	}
 }

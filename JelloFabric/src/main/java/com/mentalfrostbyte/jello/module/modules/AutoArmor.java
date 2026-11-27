@@ -2,6 +2,7 @@ package com.mentalfrostbyte.jello.module.modules;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.NumberValue;
 import com.mentalfrostbyte.jello.util.TimerUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.List;
@@ -25,10 +26,11 @@ import net.minecraft.world.item.equipment.Equippable;
  */
 public class AutoArmor extends Module {
 	private final TimerUtil timer = new TimerUtil();
+	private final NumberValue delay = addValue(new NumberValue("Delay", 40, 1, 500, 1));
 	public boolean bestarmor = true;
 
 	public AutoArmor() {
-		super("Auto Armor", 0, Category.ITEM);
+		super("AutoArmor", 0, Category.ITEM);
 	}
 
 	@Override
@@ -37,7 +39,7 @@ public class AutoArmor extends Module {
 			return;
 		}
 		Player player = mc.player;
-		if (!(player.containerMenu instanceof InventoryMenu menu) || !timer.hasTimeElapsed(200, true)) {
+		if (!(player.containerMenu instanceof InventoryMenu menu) || !timer.hasTimeElapsed((long) delay.getValue(), true)) {
 			return;
 		}
 		List<net.minecraft.world.inventory.Slot> slots = menu.slots;

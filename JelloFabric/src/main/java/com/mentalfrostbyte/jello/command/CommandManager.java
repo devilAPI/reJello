@@ -6,6 +6,7 @@ import com.mentalfrostbyte.jello.config.ConfigManager;
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.setting.BooleanValue;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import com.mentalfrostbyte.jello.setting.NumberValue;
 import com.mentalfrostbyte.jello.setting.Value;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -254,22 +255,43 @@ public final class CommandManager {
 			Jello.addChatMessage("Usage: .set <module> <setting> <value>");
 			return;
 		}
-		String valueName = args[args.length - 1];
-		String settingName = args[args.length - 2];
-		Module module = Jello.getModule(join(args, 1, args.length - 2));
+		Module module = null;
+		int moduleEnd = -1;
+		for (int k = args.length - 2; k >= 1; k--) {
+			Module candidate = Jello.getModule(join(args, 1, k));
+			if (candidate != null) {
+				module = candidate;
+				moduleEnd = k;
+				break;
+			}
+		}
 		if (module == null) {
-			Jello.addChatMessage("Unknown module: " + join(args, 1, args.length - 2));
+			Jello.addChatMessage("Unknown module");
 			return;
 		}
-		Value value = module.getValue(settingName);
-		if (value == null) {
-			Jello.addChatMessage("Unknown setting: " + settingName);
+		Value setting = null;
+		int settingEnd = -1;
+		for (int k = args.length - 1; k > moduleEnd; k--) {
+			Value candidate = module.getValue(join(args, moduleEnd + 1, k));
+			if (candidate != null) {
+				setting = candidate;
+				settingEnd = k;
+				break;
+			}
+		}
+		if (setting == null) {
+			Jello.addChatMessage("Unknown setting on " + module.getName());
 			return;
 		}
+		String settingName = setting.getName();
+		String valueName = join(args, settingEnd, args.length);
+		Value value = setting;
 		if (value instanceof BooleanValue bool) {
 			bool.set(Boolean.parseBoolean(valueName) || valueName.equalsIgnoreCase("on"));
 		} else if (value instanceof NumberValue number) {
 			number.setVal(Double.parseDouble(valueName));
+		} else if (value instanceof ModeValue mode) {
+			mode.setMode(valueName);
 		}
 		ConfigManager.save();
 		Jello.addChatMessage(module.getName() + " > " + value.getName() + " = " + valueText(value));
@@ -281,6 +303,9 @@ public final class CommandManager {
 		}
 		if (value instanceof NumberValue number) {
 			return String.valueOf(number.getValue());
+		}
+		if (value instanceof ModeValue mode) {
+			return mode.getMode();
 		}
 		return "?";
 	}

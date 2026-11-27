@@ -4,6 +4,8 @@ import com.mentalfrostbyte.jello.event.EventTarget;
 import com.mentalfrostbyte.jello.event.events.EventMove;
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.ModeValue;
+import com.mentalfrostbyte.jello.setting.NumberValue;
 import com.mentalfrostbyte.jello.util.PlayerUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.player.LocalPlayer;
@@ -15,8 +17,12 @@ public class LongJump extends Module {
 	private boolean wasOnGround;
 	private boolean wasNotOnGround;
 
+	private final ModeValue mode = addValue(new ModeValue("Mode", "Matrix", "Matrix", "Minemora", "MatrixBow"));
+	private final NumberValue matrixBoost = addValue(new NumberValue("MatrixBoost", 1, 1, 3, 0.1));
+	private final NumberValue matrixVerBoost = addValue(new NumberValue("MatrixVerBoost", 1, 0.1, 8, 0.1));
+
 	public LongJump() {
-		super("LongJump", 0, Category.MOVEMENT);
+		super("LongJump", InputConstants.KEY_B, Category.MOVEMENT);
 	}
 
 	@Override

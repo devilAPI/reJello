@@ -2,8 +2,8 @@
 
 ## Status
 
-The port now compiles and runs (`./gradlew build`, `./gradlew runClient`). The original 1.8 source is kept
-outside this repository as the public `EnderDrago0/SigmaJello` project; this repo contains the 26.3 port.
+The port now compiles and runs (`./gradlew build`, `./gradlew runClient`). It combines the original 1.8
+source with the Sigma Reborn 1.18 module set (decompiled from the Reborn jar with Vineflower).
 
 ## Source facts
 
@@ -56,6 +56,16 @@ outside this repository as the public `EnderDrago0/SigmaJello` project; this rep
 - ClickGUI (`gui/JelloGui`), panels and settings popup, closing animation.
 - Chat command system (`command/CommandManager`: `.help`, `.bind`, `.toggle`, `.gui`, `.config`, `.alt`, ...).
 - Offline alt manager (`alt/*`) persisting to `Jello/Alts.txt`.
+
+## Reborn 1.18 module set
+
+All 70 modules registered by Sigma Reborn 1.18 are present, plus the legacy `InvCleaner` and `BunnyHop`,
+for 72 registered modules in seven categories (Movement, Player, Combat, Item, Render, World, Misc).
+`ModeValue` settings, the 4+3 category grid and the two-column settings popup were added with them.
+
+Exploit/anti-cheat specific modules (Disabler, ServerCrasher, AutoPlay, JelloBot, Timer, Freecam, Chams,
+ItemPhysics, Animations) are registered with their 1.18 settings and categories, but their destructive
+or server-specific implementations are intentionally not reproduced.
 
 ## Not written
 

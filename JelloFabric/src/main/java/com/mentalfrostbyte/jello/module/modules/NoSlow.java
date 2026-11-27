@@ -4,11 +4,12 @@ import com.mentalfrostbyte.jello.event.EventTarget;
 import com.mentalfrostbyte.jello.event.events.EventSlowDown;
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
-import com.mojang.blaze3d.platform.InputConstants;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 
-/** Removes the movement penalty while eating, blocking or drawing a bow. */
+/** Removes the item-use slowdown (Delay/NCP/Matrix modes share the same 26.3 behaviour). */
 public class NoSlow extends Module {
 	public static boolean enabled;
+	private final ModeValue mode = addValue(new ModeValue("Mode", "Delay", "Delay", "NCP", "Matrix"));
 
 	public NoSlow() {
 		super("NoSlow", 0, Category.MOVEMENT);

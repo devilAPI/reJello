@@ -6,6 +6,7 @@ import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.render.Fonts;
 import com.mentalfrostbyte.jello.render.Render2D;
 import com.mentalfrostbyte.jello.setting.BooleanValue;
+import com.mentalfrostbyte.jello.setting.ModeValue;
 import com.mentalfrostbyte.jello.setting.NumberValue;
 import com.mentalfrostbyte.jello.setting.Value;
 import com.mentalfrostbyte.jello.util.Anim;
@@ -32,8 +33,8 @@ public class JelloGui extends Screen {
 	private static final float ROW_H = 15;
 	private static final float PANEL_H = 150;
 	private static final float BORDER = 9.5f;
-	private static final float VIRTUAL_W = 640;
-	private static final float VIRTUAL_H = 210;
+	private static final float VIRTUAL_W = 490;
+	private static final float VIRTUAL_H = 385;
 	private static final float PANEL_GAP = 19;
 
 	private final Minecraft mc = Minecraft.getInstance();
@@ -60,11 +61,12 @@ public class JelloGui extends Screen {
 
 	public JelloGui() {
 		super(Component.literal("Jello"));
-		float x = 10;
-		float y = 10;
+		int index = 0;
 		for (Category category : Category.values()) {
+			float x = 10 + (index % 4) * (PANEL_W + PANEL_GAP);
+			float y = 10 + (index / 4) * 190;
 			panels.add(new Panel(x, y, category));
-			x += PANEL_W + PANEL_GAP;
+			index++;
 		}
 	}
 
@@ -176,9 +178,15 @@ public class JelloGui extends Screen {
 		this.mouseY = toVirtualY(mouseY);
 		scrollDelta = 0;
 		Module menu = Jello.getModule("Menu");
+		Module clickGui = Jello.getModule("ClickGUI");
 		Value blur = menu == null ? null : menu.getValue("Blur");
-		if (blur instanceof BooleanValue bool && bool.getValue()) {
-			g.blurBeforeThisStratum();
+		Value clickBlur = clickGui == null ? null : clickGui.getValue("Blur");
+		if ((blur instanceof BooleanValue b && b.getValue()) || (clickBlur instanceof BooleanValue c && c.getValue())) {
+			try {
+				g.blurBeforeThisStratum();
+			} catch (IllegalStateException ignored) {
+				// The vanilla background may already have queued the single blur allowed per frame.
+			}
 		}
 		float p = Anim.smooth(percent, lastPercent);
 		float p2 = Anim.smooth(percent2, lastPercent2);
@@ -223,8 +231,12 @@ public class JelloGui extends Screen {
 		}
 	}
 
+	private int popupColumns() {
+		return selectedModule != null && selectedModule.getValues().size() > 7 ? 2 : 1;
+	}
+
 	private float popupWidth(float intro) {
-		return PANEL_W + 60 * intro;
+		return popupColumns() == 2 ? 250 : PANEL_W + 60 * intro;
 	}
 
 	private float popupX(float intro, float popupWidth) {
@@ -241,7 +253,9 @@ public class JelloGui extends Screen {
 		}
 		Render2D.rect(g, 0, 0, VIRTUAL_W, VIRTUAL_H, Render2D.color(0, 0, 0, intro * 96 / 255f));
 		float width = popupWidth(intro);
-		float height = 150 + 14.5f * intro;
+		int columns = popupColumns();
+		int rows = (selectedModule.getValues().size() + columns - 1) / columns;
+		float height = HEADER_H + 10 + rows * 17 + 8;
 		float x = popupX(intro, width);
 		float y = selectedCategory.y;
 		frame(g, x, y, width, height, intro);
@@ -250,15 +264,22 @@ public class JelloGui extends Screen {
 
 		int index = 0;
 		for (Value value : selectedModule.getValues()) {
-			float rowY = y + HEADER_H + 10 + (34 / 2f) * index;
+			int column = index % columns;
+			int row = index / columns;
+			float colX = x + column * 112;
+			float rowY = y + HEADER_H + 10 + 17 * row;
 			if (value instanceof BooleanValue bool) {
-				float bx = x + width - 19;
+				float bx = colX + 88;
 				Render2D.image(g, bool.getValue() ? "checked" : "unchecked", bx, rowY, 12, 12, Render2D.white(intro));
-				Fonts.jelloFontGui.drawString(g, bool.getName(), x + 7, y + HEADER_H + 21 / 2f + (34 / 2f) * index,
-					Render2D.color(0, 0, 0, intro));
+				Fonts.jelloFontGui.drawString(g, bool.getName(), colX + 7, rowY + 3, Render2D.color(0, 0, 0, intro));
+			} else if (value instanceof ModeValue mode) {
+				float bx = colX + 30;
+				Render2D.rect(g, bx, rowY, colX + 92, rowY + 13, Render2D.color(0, 0, 0, intro * 0.12f));
+				Fonts.jelloFontGui.drawString(g, mode.getMode(), bx + 4, rowY + 3, Render2D.color(0, 0, 0, intro));
+				Fonts.jelloFontGui.drawString(g, mode.getName(), colX + 7, rowY + 3, Render2D.color(0, 0, 0, intro));
 			} else if (value instanceof NumberValue number) {
-				float sliderLeft = x + 11 + 95;
-				float sliderWidth = 52 - 11;
+				float sliderLeft = colX + 11 + 60;
+				float sliderWidth = 30;
 				float actual = (float) ((number.getValue() - number.getMin()) / (number.getMax() - number.getMin()));
 				Render2D.image(g, "leftslider", sliderLeft, rowY + 10, 2, 3, Render2D.white(intro));
 				Render2D.rect(g, sliderLeft, rowY + 10, sliderLeft + sliderWidth * actual, rowY + 13,
@@ -267,8 +288,7 @@ public class JelloGui extends Screen {
 					Render2D.color(0, 0, 0, intro * 0.1f));
 				float headX = sliderLeft + sliderWidth * actual - 4.5f;
 				Render2D.image(g, "sliderhead", headX, rowY - 4.5f, 11.5f, 12.5f, Render2D.white(intro));
-				Fonts.jelloFontGui.drawString(g, number.getName(), x + 7, y + HEADER_H + 21 / 2f + (34 / 2f) * index,
-					Render2D.color(0, 0, 0, intro));
+				Fonts.jelloFontGui.drawString(g, number.getName(), colX + 7, rowY + 3, Render2D.color(0, 0, 0, intro));
 			}
 			index++;
 		}
@@ -302,17 +322,26 @@ public class JelloGui extends Screen {
 		float width = popupWidth(intro);
 		float x = popupX(intro, width);
 		float y = selectedCategory.y;
+		int columns = popupColumns();
 		int index = 0;
 		for (Value value : selectedModule.getValues()) {
-			float rowY = y + HEADER_H + 10 + (34 / 2f) * index;
+			int column = index % columns;
+			int row = index / columns;
+			float colX = x + column * 112;
+			float rowY = y + HEADER_H + 10 + 17 * row;
 			if (value instanceof BooleanValue bool) {
-				if (Render2D.hovering(x + width - 19, rowY, 12, 12, mouseX, mouseY)) {
+				if (Render2D.hovering(colX + 88, rowY, 12, 12, mouseX, mouseY)) {
 					bool.toggle();
 					return true;
 				}
+			} else if (value instanceof ModeValue mode) {
+				if (Render2D.hovering(colX + 30, rowY, 62, 13, mouseX, mouseY)) {
+					mode.cycle();
+					return true;
+				}
 			} else if (value instanceof NumberValue number) {
-				float sliderLeft = x + 11 + 95;
-				float sliderWidth = 52 - 11;
+				float sliderLeft = colX + 11 + 60;
+				float sliderWidth = 30;
 				if (Render2D.hovering(sliderLeft - 4.5f, rowY - 4.5f, sliderWidth + 9, 21, mouseX, mouseY)) {
 					float actual = Math.max(0, Math.min(1, (mouseX - sliderLeft) / sliderWidth));
 					number.setVal(number.getMin() + actual * (number.getMax() - number.getMin()));
@@ -341,8 +370,10 @@ public class JelloGui extends Screen {
 		if (selectedValue != null) {
 			float intro = Anim.smooth(settingsTrans, lastSettingsTrans);
 			float x = popupX(intro, popupWidth(intro));
-			float sliderLeft = x + 11 + 95;
-			float actual = Math.max(0, Math.min(1, (mouseX - sliderLeft) / (52 - 11)));
+			int index = selectedModule.getValues().indexOf(selectedValue);
+			int column = index % popupColumns();
+			float sliderLeft = x + column * 112 + 11 + 60;
+			float actual = Math.max(0, Math.min(1, (mouseX - sliderLeft) / 30.0f));
 			selectedValue.setVal(selectedValue.getMin() + actual * (selectedValue.getMax() - selectedValue.getMin()));
 			return true;
 		}

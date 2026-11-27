@@ -2,6 +2,9 @@ package com.mentalfrostbyte.jello.module.modules;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.BooleanValue;
+import com.mentalfrostbyte.jello.setting.ModeValue;
+import com.mentalfrostbyte.jello.setting.NumberValue;
 import com.mentalfrostbyte.jello.util.TimerUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.List;
@@ -25,9 +28,16 @@ public class BlockFly extends Module {
 	public static boolean isEnabled;
 	private final TimerUtil timer = new TimerUtil();
 	private final TimerUtil refillTimer = new TimerUtil();
+	private final ModeValue towerMode = addValue(new ModeValue("TowerMode", "None", "None", "Matrix"));
+	private final NumberValue delay = addValue(new NumberValue("Delay", 0, 0, 20, 1));
+	private final BooleanValue sprint = addValue(new BooleanValue("Sprint", false));
+	private final BooleanValue keepY = addValue(new BooleanValue("KeepY", false));
+	private final BooleanValue safeWalk = addValue(new BooleanValue("SafeWalk", true));
+	private final BooleanValue eagle = addValue(new BooleanValue("Eagle", false));
+	private final BooleanValue placeFix = addValue(new BooleanValue("PlaceFix", true));
 
 	public BlockFly() {
-		super("Block Fly", InputConstants.KEY_J, Category.MOVEMENT);
+		super("BlockFly", InputConstants.KEY_C, Category.MOVEMENT);
 	}
 
 	@Override
@@ -46,10 +56,18 @@ public class BlockFly extends Module {
 		if (!isToggled() || mc.player == null || mc.level == null || mc.gameMode == null) {
 			return;
 		}
-		if (!timer.hasTimeElapsed(50, true)) {
+		if (!timer.hasTimeElapsed((long) (delay.getValue() * 50) + 1, true)) {
 			return;
 		}
 		LocalPlayer player = mc.player;
+		if (sprint.getValue()) {
+			player.setSprinting(true);
+		}
+		if ((safeWalk.getValue() || eagle.getValue()) && !com.mentalfrostbyte.jello.util.PlayerUtil.isNotCollidingBelow(0.6)) {
+			mc.options.keyShift.setDown(true);
+		} else if (safeWalk.getValue() || eagle.getValue()) {
+			mc.options.keyShift.setDown(false);
+		}
 		int slot = findBlockSlot();
 		if (slot == -1) {
 			// The 1.8 module pulled blocks from the main inventory into the hotbar before placing.

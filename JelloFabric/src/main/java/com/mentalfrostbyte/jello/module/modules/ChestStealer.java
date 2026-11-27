@@ -2,6 +2,9 @@ package com.mentalfrostbyte.jello.module.modules;
 
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
+import com.mentalfrostbyte.jello.setting.BooleanValue;
+import com.mentalfrostbyte.jello.setting.NumberValue;
+import com.mentalfrostbyte.jello.util.TimerUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +18,16 @@ import net.minecraft.world.inventory.Slot;
 public class ChestStealer extends Module {
 	private final Random random = new Random();
 	private final List<Integer> chestSlots = new ArrayList<>();
+	private final TimerUtil timer = new TimerUtil();
+	private final BooleanValue aura = addValue(new BooleanValue("Aura", false));
+	private final NumberValue auraRange = addValue(new NumberValue("AuraRange", 3.0, 1.0, 4.0, 0.5));
+	private final NumberValue delay = addValue(new NumberValue("Delay", 75, 50, 150, 5));
+	private final BooleanValue assist = addValue(new BooleanValue("ChestAssist Beta", false));
+	private final BooleanValue ai = addValue(new BooleanValue("ChestAssist AI", false));
+	private final BooleanValue log = addValue(new BooleanValue("ChestAssist Logging", true));
 
 	public ChestStealer() {
-		super("Chest Stealer", 0, Category.PLAYER);
+		super("ChestStealer", 0, Category.ITEM);
 	}
 
 	@Override
@@ -29,7 +39,7 @@ public class ChestStealer extends Module {
 		if (menu == null || mc.player.getInventory().getFreeSlot() == -1) {
 			return;
 		}
-		if (mc.player.tickCount % 4 != 0) {
+		if (!timer.hasTimeElapsed((long) delay.getValue(), true)) {
 			return;
 		}
 		chestSlots.clear();
