@@ -7,8 +7,9 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.player.LocalPlayer;
 
 /**
- * Hover in place: the 1.8 original zeroed the motion and forced {@code onGround} every tick. 26.x applies
- * gravity inside {@code travel}, so the equivalent is to keep the player's own flight enabled while the module is on.
+ * Hover in place. The 1.8 original zeroed vertical motion and forced {@code onGround} every tick; 26.x applies
+ * gravity inside {@code travel}, so gravity is cancelled for the local player through a mixin (see
+ * {@link com.mentalfrostbyte.jello.mixin.LivingEntityMixin}) while this module is on.
  */
 public class AirWalk extends Module {
 	public static boolean isEnabled;
@@ -28,11 +29,6 @@ public class AirWalk extends Module {
 	public void onDisable() {
 		isEnabled = false;
 		counter = 0;
-		if (mc.player != null) {
-			mc.player.getAbilities().flying = false;
-			mc.player.getAbilities().mayfly = false;
-			mc.player.onUpdateAbilities();
-		}
 	}
 
 	@Override
@@ -44,18 +40,11 @@ public class AirWalk extends Module {
 		if (p.hurtTime == 19) {
 			p.setDeltaMovement(0, 0, 0);
 		}
-		p.getAbilities().mayfly = true;
-		p.getAbilities().flying = true;
-		p.onUpdateAbilities();
-		// Data is only sent when a field actually changed; refresh every tick.
-		p.getAbilities().flying = true;
 		p.fallDistance = 0;
-		counter++;
-		if (counter > 1) {
-			counter = 0;
+		p.setOnGround(true);
+		if (!mc.options.keyJump.isDown()) {
+			p.setDeltaMovement(p.getDeltaMovement().x, 0, p.getDeltaMovement().z);
 		}
-		if (PlayerUtil.isMoving() && !p.getAbilities().flying) {
-			p.getAbilities().flying = true;
-		}
+		counter = (counter + 1) % 2;
 	}
 }

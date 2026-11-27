@@ -42,16 +42,19 @@ public class AutoArmor extends Module {
 		}
 		List<net.minecraft.world.inventory.Slot> slots = menu.slots;
 		for (EquipmentSlot equipment : new EquipmentSlot[] {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
-			double current = armorValue(player.getItemBySlot(equipment));
+			ItemStack worn = player.getItemBySlot(equipment);
+			boolean empty = worn.isEmpty();
+			double current = armorValue(worn);
 			int bestSlot = -1;
-			double best = current;
+			double best = bestarmor ? current : -1;
 			for (int i = 9; i < 45 && i < slots.size(); i++) {
 				ItemStack stack = slots.get(i).getItem();
 				if (equipmentOf(stack) != equipment) {
 					continue;
 				}
 				double value = armorValue(stack);
-				if (value > best) {
+				// "Best armor" upgrades worn pieces; otherwise only empty slots get filled.
+				if (empty ? value > best : bestarmor && value > best) {
 					best = value;
 					bestSlot = i;
 				}

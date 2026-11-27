@@ -10,7 +10,9 @@ import com.mentalfrostbyte.jello.util.TimerUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.List;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -88,8 +90,18 @@ public class KillAura extends Module {
 		player.setXRot(progressPitch);
 
 		if (timer.hasTimeElapsed(100, true) && player.distanceTo(closestE) <= range.getValue()) {
+			boolean extraKnockback = knockback.getValue() && player.getFoodData().getFoodLevel() > 6;
+			if (extraKnockback && mc.getConnection() != null) {
+				mc.getConnection().send(new ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
+			}
 			mc.gameMode.attack(player, closestE);
 			player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
+			if (autoblock.getValue() && player.getOffhandItem().get(DataComponents.EQUIPPABLE) != null) {
+				mc.gameMode.useItem(player, InteractionHand.OFF_HAND);
+			}
+			if (extraKnockback && mc.getConnection() != null) {
+				mc.getConnection().send(new ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
+			}
 		}
 	}
 

@@ -4,6 +4,7 @@ import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.util.TimerUtil;
 import com.mojang.blaze3d.platform.InputConstants;
+import java.util.List;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -23,6 +24,7 @@ import net.minecraft.world.phys.Vec3;
 public class BlockFly extends Module {
 	public static boolean isEnabled;
 	private final TimerUtil timer = new TimerUtil();
+	private final TimerUtil refillTimer = new TimerUtil();
 
 	public BlockFly() {
 		super("Block Fly", InputConstants.KEY_J, Category.MOVEMENT);
@@ -50,6 +52,10 @@ public class BlockFly extends Module {
 		LocalPlayer player = mc.player;
 		int slot = findBlockSlot();
 		if (slot == -1) {
+			// The 1.8 module pulled blocks from the main inventory into the hotbar before placing.
+			if (refillTimer.hasTimeElapsed(400, true)) {
+				refillHotbar();
+			}
 			return;
 		}
 		BlockPos target = BlockPos.containing(player.getX(), player.getY() - 1.0, player.getZ());
@@ -79,6 +85,21 @@ public class BlockFly extends Module {
 			mc.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, new BlockHitResult(hit, face, support, false));
 			player.swing(InteractionHand.MAIN_HAND, net.minecraft.world.item.component.SwingAnimation.DEFAULT, false);
 			return;
+		}
+	}
+
+	private static void refillHotbar() {
+		if (mc.player == null || mc.player.containerMenu != mc.player.inventoryMenu) {
+			return;
+		}
+		List<net.minecraft.world.inventory.Slot> slots = mc.player.inventoryMenu.slots;
+		for (int i = 9; i < 36 && i < slots.size(); i++) {
+			ItemStack stack = slots.get(i).getItem();
+			if (stack.getItem() instanceof BlockItem block && isValidBlock(block.getBlock().defaultBlockState())) {
+				mc.gameMode.handleContainerInput(0, i, mc.player.getInventory().getSelectedSlot(),
+					net.minecraft.world.inventory.ContainerInput.SWAP, mc.player);
+				return;
+			}
 		}
 	}
 

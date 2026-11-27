@@ -26,7 +26,7 @@ public class ChestStealer extends Module {
 			return;
 		}
 		ChestMenu menu = screen.getMenu() instanceof ChestMenu chest ? chest : null;
-		if (menu == null) {
+		if (menu == null || mc.player.getInventory().getFreeSlot() == -1) {
 			return;
 		}
 		if (mc.player.tickCount % 4 != 0) {

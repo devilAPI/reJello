@@ -175,6 +175,11 @@ public class JelloGui extends Screen {
 		this.mouseX = toVirtualX(mouseX);
 		this.mouseY = toVirtualY(mouseY);
 		scrollDelta = 0;
+		Module menu = Jello.getModule("Menu");
+		Value blur = menu == null ? null : menu.getValue("Blur");
+		if (blur instanceof BooleanValue bool && bool.getValue()) {
+			g.blurBeforeThisStratum();
+		}
 		float p = Anim.smooth(percent, lastPercent);
 		float p2 = Anim.smooth(percent2, lastPercent2);
 		// The intro starts at 1.23; clamping to 1 keeps the 640px canvas inside small windows.

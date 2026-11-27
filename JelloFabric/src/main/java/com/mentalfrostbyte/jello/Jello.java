@@ -74,8 +74,9 @@ public final class Jello {
 	}
 
 	public static @Nullable Module getModule(String name) {
+		String normalized = name.replace(" ", "");
 		for (Module m : mods) {
-			if (m.getName().equalsIgnoreCase(name)) {
+			if (m.getName().equalsIgnoreCase(name) || m.getName().replace(" ", "").equalsIgnoreCase(normalized)) {
 				return m;
 			}
 		}

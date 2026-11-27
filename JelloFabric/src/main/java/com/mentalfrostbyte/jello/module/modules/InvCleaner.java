@@ -8,6 +8,7 @@ import java.util.List;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
@@ -15,7 +16,13 @@ import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.item.equipment.Equippable;
 
 /** Throws away the item classes the 1.8 InvCleaner considered junk. */
@@ -61,7 +68,8 @@ public class InvCleaner extends Module {
 			return;
 		}
 		ItemStack stack = all.get(slots).getItem();
-		if (isItemBad(stack) && stack != player.getMainHandItem()) {
+		double heldValue = swordValue(player.getMainHandItem());
+		if (isItemBad(stack) && swordValue(stack) <= heldValue && stack != player.getMainHandItem()) {
 			mc.gameMode.handleContainerInput(menu.containerId, slots, 1, ContainerInput.THROW, player);
 			waiting = true;
 			timer.reset();
@@ -98,6 +106,23 @@ public class InvCleaner extends Module {
 			}
 		}
 		return false;
+	}
+
+	/** Sharpness + attack damage, the 1.8 comparison that kept the better sword in the inventory. */
+	private static double swordValue(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) {
+			return 0;
+		}
+		double damage = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY)
+			.compute(Attributes.ATTACK_DAMAGE, 0, EquipmentSlot.MAINHAND);
+		int sharpness = 0;
+		ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+		for (Holder<Enchantment> holder : enchantments.keySet()) {
+			if (holder.is(Enchantments.SHARPNESS)) {
+				sharpness = enchantments.getLevel(holder);
+			}
+		}
+		return damage + sharpness;
 	}
 
 	static boolean isArmor(ItemStack stack) {

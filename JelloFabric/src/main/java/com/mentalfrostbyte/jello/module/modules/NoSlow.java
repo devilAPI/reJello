@@ -12,9 +12,6 @@ public class NoSlow extends Module {
 
 	public NoSlow() {
 		super("NoSlow", 0, Category.MOVEMENT);
-		addValue(new com.mentalfrostbyte.jello.setting.BooleanValue("Run", false));
-		addValue(new com.mentalfrostbyte.jello.setting.BooleanValue("Step", false));
-		addValue(new com.mentalfrostbyte.jello.setting.BooleanValue("Brakes", false));
 	}
 
 	@Override
