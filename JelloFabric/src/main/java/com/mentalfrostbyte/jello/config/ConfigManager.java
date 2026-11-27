@@ -47,8 +47,12 @@ public final class ConfigManager {
 					} catch (NumberFormatException ignored) {
 					}
 					// Applied without onEnable(): there is no world yet. Module hooks only run while in game.
-					if (Boolean.parseBoolean(split[2]) && !m.isToggled()) {
-						m.setToggled(true);
+					boolean enabled = Boolean.parseBoolean(split[2]);
+					if (m.getName().equals("Menu") || m.getName().equals("ClickGUI")) {
+						enabled = false;
+					}
+					if (enabled != m.isToggled()) {
+						m.setToggled(enabled);
 					}
 				}
 			}

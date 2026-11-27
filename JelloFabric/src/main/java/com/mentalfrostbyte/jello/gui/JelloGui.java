@@ -203,6 +203,13 @@ public class JelloGui extends Screen {
 		return Math.min(1f, Math.min((width - 8f) / VIRTUAL_W, (height - 8f) / VIRTUAL_H));
 	}
 
+	/** Same scale the panels are drawn with, so mouse mapping matches the intro animation. */
+	private float renderScale() {
+		float p = Anim.smooth(percent, lastPercent);
+		float p2 = Anim.smooth(percent2, lastPercent2);
+		return fitScale() * Math.min(1f, p > 0.98f ? p : p2);
+	}
+
 	private float offsetX(float scale) {
 		return (width - VIRTUAL_W * scale) / 2f;
 	}
@@ -212,12 +219,12 @@ public class JelloGui extends Screen {
 	}
 
 	private int toVirtualX(double screenX) {
-		float scale = fitScale();
+		float scale = renderScale();
 		return Math.round((float) ((screenX - offsetX(scale)) / scale));
 	}
 
 	private int toVirtualY(double screenY) {
-		float scale = fitScale();
+		float scale = renderScale();
 		return Math.round((float) ((screenY - offsetY(scale)) / scale));
 	}
 
@@ -237,10 +244,8 @@ public class JelloGui extends Screen {
 				// The vanilla background may already have queued the single blur allowed per frame.
 			}
 		}
-		float p = Anim.smooth(percent, lastPercent);
-		float p2 = Anim.smooth(percent2, lastPercent2);
-		// The intro starts at 1.23; clamping to 1 keeps the 640px canvas inside small windows.
-		float scale = fitScale() * Math.min(1f, p > 0.98f ? p : p2);
+		// The intro starts at 1.23; clamping to 1 keeps the canvas inside small windows.
+		float scale = renderScale();
 		g.pose().pushMatrix();
 		g.pose().translate(width / 2f, height / 2f);
 		g.pose().scale(scale, scale);
@@ -360,7 +365,7 @@ public class JelloGui extends Screen {
 		mouseY = toVirtualY(event.y());
 		selectedValue = null;
 		if (selectedModule != null && selectedCategory != null) {
-			if (handlePopupClick()) {
+			if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT && handlePopupClick()) {
 				return true;
 			}
 			exit = true;
@@ -520,7 +525,9 @@ public class JelloGui extends Screen {
 		}
 
 		public void mouseClicked(int button, JelloGui parent) {
-			if (button == 0 && Render2D.hovering(x, y, PANEL_W, HEADER_H, parent.mouseX, parent.mouseY)) {
+			boolean left = button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT;
+			boolean right = button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT;
+			if (left && Render2D.hovering(x, y, PANEL_W, HEADER_H, parent.mouseX, parent.mouseY)) {
 				startX = parent.mouseX;
 				startY = parent.mouseY;
 				lastX = x;
@@ -533,9 +540,9 @@ public class JelloGui extends Screen {
 				if (!isHovering(module, parent.mouseX, parent.mouseY)) {
 					continue;
 				}
-				if (button == 0) {
+				if (left) {
 					module.toggle();
-				} else if (button == 1) {
+				} else if (right) {
 					parent.selectedModule = module;
 					parent.selectedCategory = this;
 					parent.exit = false;

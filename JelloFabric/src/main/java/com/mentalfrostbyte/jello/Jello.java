@@ -112,7 +112,19 @@ public final class Jello {
 		hud = new JelloHud();
 		jgui = new JelloGui();
 		altManager.load();
+		// Fresh installs get the TabGUI HUD without having to open the ClickGUI first.
+		Module tab = getModule("TabGUI");
+		if (tab != null) {
+			tab.setToggled(true);
+		}
 		ConfigManager.load();
+		// The GUI triggers are never valid persistent states.
+		for (String trigger : new String[] {"Menu", "ClickGUI"}) {
+			Module module = getModule(trigger);
+			if (module != null) {
+				module.setToggled(false);
+			}
+		}
 	}
 
 	public static void register(Module module) {

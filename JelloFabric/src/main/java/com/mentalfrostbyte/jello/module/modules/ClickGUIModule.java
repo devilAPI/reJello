@@ -21,7 +21,7 @@ public class ClickGUIModule extends Module {
 
 	@Override
 	public void onEnable() {
-		if (mc.level != null) {
+		if (mc.level != null && mc.gui.screen() == null) {
 			mc.gui.setScreen(Jello.jgui);
 			setToggled(false);
 		}

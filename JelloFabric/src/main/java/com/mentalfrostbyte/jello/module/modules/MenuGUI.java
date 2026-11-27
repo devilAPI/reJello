@@ -13,7 +13,7 @@ public class MenuGUI extends Module {
 
 	@Override
 	public void onEnable() {
-		if (mc.level != null) {
+		if (mc.level != null && mc.gui.screen() == null) {
 			mc.gui.setScreen(Jello.jgui);
 			// The module is a trigger, never left switched on.
 			setToggled(false);
