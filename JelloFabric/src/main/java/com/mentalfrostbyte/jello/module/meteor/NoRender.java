@@ -3,57 +3,97 @@ package com.mentalfrostbyte.jello.module.meteor;
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.setting.BooleanValue;
-import com.mentalfrostbyte.jello.setting.ModeValue;
 
-/** Meteor Client module (No Render). Behaviour port pending. */
+/**
+ * Meteor Client NoRender: disables assorted overlays and animations.
+ *
+ * <p>Ported without mixins where the vanilla options allow it: weather (rain/thunder level), vignette and the
+ * screen distortion used by nausea and the portal overlay ({@code screenEffectScale}). The remaining toggles
+ * (pumpkin/fire/liquid overlays, HUD bars, fog, entity rendering, nametags, ...) are rendered by vanilla
+ * methods that Jello does not inject into, so they are kept as settings but are inert for now.</p>
+ */
 public class NoRender extends Module {
-	private final BooleanValue value1 = addValue(new BooleanValue("portal-overlay", false));
-	private final BooleanValue value2 = addValue(new BooleanValue("spyglass-overlay", false));
-	private final BooleanValue value3 = addValue(new BooleanValue("nausea", false));
-	private final BooleanValue value4 = addValue(new BooleanValue("pumpkin-overlay", false));
-	private final BooleanValue value5 = addValue(new BooleanValue("powdered-snow-overlay", false));
-	private final BooleanValue value6 = addValue(new BooleanValue("fire-overlay", false));
-	private final BooleanValue value7 = addValue(new BooleanValue("liquid-overlay", false));
-	private final BooleanValue value8 = addValue(new BooleanValue("in-wall-overlay", false));
-	private final BooleanValue value9 = addValue(new BooleanValue("vignette", false));
-	private final BooleanValue value10 = addValue(new BooleanValue("gui-background", false));
-	private final BooleanValue value11 = addValue(new BooleanValue("totem-animation", false));
-	private final BooleanValue value12 = addValue(new BooleanValue("eating-particles", false));
-	private final BooleanValue value13 = addValue(new BooleanValue("enchantment-glint", false));
-	private final BooleanValue value14 = addValue(new BooleanValue("boss-bar", false));
-	private final BooleanValue value15 = addValue(new BooleanValue("scoreboard", false));
-	private final BooleanValue value16 = addValue(new BooleanValue("crosshair", false));
-	private final BooleanValue value17 = addValue(new BooleanValue("title", false));
-	private final BooleanValue value18 = addValue(new BooleanValue("held-item-name", false));
-	private final BooleanValue value19 = addValue(new BooleanValue("obfuscation", false));
-	private final BooleanValue value20 = addValue(new BooleanValue("potion-icons", false));
-	private final BooleanValue value21 = addValue(new BooleanValue("message-signature-indicator", false));
-	private final BooleanValue value22 = addValue(new BooleanValue("weather", false));
-	private final BooleanValue value23 = addValue(new BooleanValue("world-border", false));
-	private final BooleanValue value24 = addValue(new BooleanValue("blindness", false));
-	private final BooleanValue value25 = addValue(new BooleanValue("darkness", false));
-	private final BooleanValue value26 = addValue(new BooleanValue("fog", false));
-	private final BooleanValue value27 = addValue(new BooleanValue("enchantment-table-book", false));
-	private final BooleanValue value28 = addValue(new BooleanValue("sign-text", false));
-	private final BooleanValue value29 = addValue(new BooleanValue("block-break-overlay", false));
-	private final BooleanValue value30 = addValue(new BooleanValue("beacon-beams", false));
-	private final BooleanValue value31 = addValue(new BooleanValue("falling-blocks", false));
-	private final BooleanValue value32 = addValue(new BooleanValue("cave-culling", false));
-	private final BooleanValue value33 = addValue(new BooleanValue("map-markers", false));
-	private final BooleanValue value34 = addValue(new BooleanValue("map-contents", false));
-	private final ModeValue value35 = addValue(new ModeValue("banners", "Everything", "Everything", "E", "P", "N"));
-	private final BooleanValue value36 = addValue(new BooleanValue("firework-explosions", false));
-	private final BooleanValue value37 = addValue(new BooleanValue("barrier-invisibility", false));
-	private final BooleanValue value38 = addValue(new BooleanValue("texture-rotations", false));
-	private final BooleanValue value39 = addValue(new BooleanValue("drop-spawn-packets", false));
-	private final BooleanValue value40 = addValue(new BooleanValue("armor", false));
-	private final BooleanValue value41 = addValue(new BooleanValue("invisibility", false));
-	private final BooleanValue value42 = addValue(new BooleanValue("glowing", false));
-	private final BooleanValue value43 = addValue(new BooleanValue("spawner-entities", false));
-	private final BooleanValue value44 = addValue(new BooleanValue("dead-entities", false));
-	private final BooleanValue value45 = addValue(new BooleanValue("nametags", false));
+	private final BooleanValue portalOverlay = addValue(new BooleanValue("Portal Overlay", false));
+	private final BooleanValue nausea = addValue(new BooleanValue("Nausea", false));
+	private final BooleanValue pumpkinOverlay = addValue(new BooleanValue("Pumpkin Overlay", false));
+	private final BooleanValue fireOverlay = addValue(new BooleanValue("Fire Overlay", false));
+	private final BooleanValue liquidOverlay = addValue(new BooleanValue("Liquid Overlay", false));
+	private final BooleanValue vignette = addValue(new BooleanValue("Vignette", false));
+	private final BooleanValue weather = addValue(new BooleanValue("Weather", false));
+	private final BooleanValue fog = addValue(new BooleanValue("Fog", false));
+	private final BooleanValue crosshair = addValue(new BooleanValue("Crosshair", false));
+	private final BooleanValue bossBar = addValue(new BooleanValue("Boss Bar", false));
+	private final BooleanValue scoreboard = addValue(new BooleanValue("Scoreboard", false));
+	private final BooleanValue title = addValue(new BooleanValue("Title", false));
+	private final BooleanValue heldItemName = addValue(new BooleanValue("Held Item Name", false));
+	private final BooleanValue potionIcons = addValue(new BooleanValue("Potion Icons", false));
+	private final BooleanValue armor = addValue(new BooleanValue("Armor", false));
+	private final BooleanValue invisibility = addValue(new BooleanValue("Invisibility", false));
+	private final BooleanValue glowing = addValue(new BooleanValue("Glowing", false));
+	private final BooleanValue nametags = addValue(new BooleanValue("Nametags", false));
+	private final BooleanValue signText = addValue(new BooleanValue("Sign Text", false));
+	private final BooleanValue beaconBeams = addValue(new BooleanValue("Beacon Beams", false));
+
+	private Boolean previousVignette;
+	private double previousScreenEffect = 1.0;
+	private boolean captured;
 
 	public NoRender() {
 		super("No Render", 0, Category.RENDER);
+	}
+
+	@Override
+	public void onEnable() {
+		captureOptions();
+	}
+
+	@Override
+	public void onDisable() {
+		if (!captured || mc.options == null) {
+			return;
+		}
+		if (previousVignette != null) {
+			mc.options.vignette().set(previousVignette);
+		}
+		mc.options.screenEffectScale().set(previousScreenEffect);
+		captured = false;
+	}
+
+	@Override
+	public void onUpdate() {
+		if (!isToggled()) {
+			return;
+		}
+		if (!captured) {
+			captureOptions();
+		}
+
+		if (weather.getValue() && mc.level != null) {
+			mc.level.setRainLevel(0f);
+			mc.level.setThunderLevel(0f);
+		}
+
+		if (mc.options != null) {
+			if (vignette.getValue()) {
+				mc.options.vignette().set(false);
+			} else if (previousVignette != null) {
+				mc.options.vignette().set(previousVignette);
+			}
+
+			if (nausea.getValue() || portalOverlay.getValue()) {
+				mc.options.screenEffectScale().set(0.0);
+			} else {
+				mc.options.screenEffectScale().set(previousScreenEffect);
+			}
+		}
+	}
+
+	private void captureOptions() {
+		if (mc.options == null) {
+			return;
+		}
+		previousVignette = mc.options.vignette().get();
+		previousScreenEffect = mc.options.screenEffectScale().get();
+		captured = true;
 	}
 }

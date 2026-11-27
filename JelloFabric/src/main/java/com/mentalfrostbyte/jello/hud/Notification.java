@@ -65,7 +65,7 @@ public class Notification {
 		if (image != null) {
 			Render2D.image(g, image, left + 7, 7.5f, 27, 27, -1);
 		}
-		Fonts.jelloFont.drawString(g, text, left + 4.5f + 32.5f + 4, 4.5f + 7.5f + 1, 0xccffffff);
+		Fonts.jelloFontRegular.drawStringShadow(g, text, left + 4.5f + 32.5f + 4, 4.5f + 7.5f + 1, 0xccffffff);
 		Fonts.jelloFontSmall.drawString(g, secondText, left + 4.5f + 32.5f + 4.5f, 4.5f + 19.5f + 1.5f, 0xaaffffff);
 	}
 }

@@ -33,7 +33,7 @@ public class JelloGui extends Screen {
 	private static final float HEADER_H = 25;
 	private static final float ROW_H = 15;
 	private static final float PANEL_H = 100;
-	private static final float LIST_H = PANEL_H - 25 - 10;
+	private static final float LIST_H = 4 * 15;
 	private static final float BORDER = 9.5f;
 	private static final float VIRTUAL_W = 480;
 	private static final float VIRTUAL_H = 240;
@@ -99,7 +99,9 @@ public class JelloGui extends Screen {
 				// One blur per frame; the vanilla menu background may already have queued it.
 			}
 		}
-		g.fillGradient(0, 0, width, height, Render2D.color(0, 0, 0, 0.35f), Render2D.color(0, 0, 0, 0.50f));
+		g.fillGradient(0, 0, width, height, Render2D.color(0.04f, 0.07f, 0.12f, 0.38f), Render2D.color(0.01f, 0.01f, 0.03f, 0.58f));
+		Render2D.circle(g, width * 0.18f, height * 0.10f, Math.max(width, height) * 0.55f,
+			Render2D.color(0.20f, 0.48f, 0.95f, 0.05f));
 		extractMenuBackground(g);
 	}
 
@@ -214,23 +216,46 @@ public class JelloGui extends Screen {
 		return !(value instanceof BooleanValue bool) || bool.getValue();
 	}
 
-	private static String panelTexture() {
-		return isDark() ? "jellopanel_dark" : "jellopanelnew";
+	private static int panelBody() {
+		return isDark() ? 0xF218191E : 0xF7FFFFFF;
+	}
+
+	private static int panelHeader() {
+		return isDark() ? 0xE6323236 : 0xE69B9B9B;
+	}
+
+	private static int panelBorder() {
+		return isDark() ? 0x2EFFFFFF : 0x40FFFFFF;
+	}
+
+	private static int accent() {
+		return isDark() ? 0xFF4BA3FF : 0xFF2F8FF7;
 	}
 
 	private static int themeText(boolean toggled, float alpha) {
-		if (isDark()) {
-			return Render2D.color(0.9f, 0.9f, 0.9f, alpha);
-		}
-		return toggled ? Render2D.color(1, 1, 1, alpha) : Render2D.color(0, 0, 0, alpha);
+		int base = toggled ? 0xFFFFFFFF : (isDark() ? 0xFFF1F3F8 : 0xFF1B1D23);
+		return applyAlpha(base, alpha);
 	}
 
 	private static int headerText(float alpha) {
-		return isDark() ? Render2D.color(1, 1, 1, alpha) : Render2D.color(0x6F6F6F / 255f, 0x6F6F6F / 255f, 0x6F6F6F / 255f, alpha);
+		return applyAlpha(0xFFFFFFFF, alpha);
+	}
+
+	private static int mutedText(float alpha) {
+		return applyAlpha(isDark() ? 0xFFA5ABBA : 0xFF5C6270, alpha);
+	}
+
+	private static int hoverRow() {
+		return isDark() ? 0x18FFFFFF : 0x0C000000;
+	}
+
+	private static int applyAlpha(int color, float alpha) {
+		int a = (int) (((color >>> 24) & 0xFF) * Math.max(0, Math.min(1, alpha)));
+		return (a << 24) | (color & 0x00FFFFFF);
 	}
 
 	private float fitScale() {
-		return Math.min(1f, Math.min((width - 8f) / VIRTUAL_W, (height - 8f) / VIRTUAL_H));
+		return Math.min(1.5f, Math.min((width - 8f) / VIRTUAL_W, (height - 8f) / VIRTUAL_H));
 	}
 
 	/** Same scale the panels are drawn with, so mouse mapping matches the intro animation. */
@@ -264,10 +289,6 @@ public class JelloGui extends Screen {
 		this.mouseY = toVirtualY(mouseY);
 		scrollDelta = 0;
 		// The intro starts at 1.23; clamping to 1 keeps the canvas inside small windows.
-		if (selectedModule != null && selectedCategory != null && settingsTrans > 0.001f) {
-			float intro = Anim.smooth(settingsTrans, lastSettingsTrans);
-			g.fill(0, 0, g.guiWidth(), g.guiHeight(), Render2D.color(0, 0, 0, intro * 180 / 255f));
-		}
 		float scale = renderScale();
 		g.pose().pushMatrix();
 		g.pose().translate(width / 2f, height / 2f);
@@ -280,6 +301,10 @@ public class JelloGui extends Screen {
 			}
 		}
 		drawPanels(g, this.mouseX, this.mouseY);
+		if (selectedModule != null && selectedCategory != null && settingsTrans > 0.001f) {
+			Render2D.rect(g, 0, 0, VIRTUAL_W, VIRTUAL_H,
+				Render2D.color(0, 0, 0, 0.45f * Anim.smooth(settingsTrans, lastSettingsTrans)));
+		}
 		drawSettings(g, this.mouseX, this.mouseY);
 		g.pose().popMatrix();
 	}
@@ -381,10 +406,10 @@ public class JelloGui extends Screen {
 		float x = popupX(intro, width);
 		float y = popupY(height);
 		frame(g, x, y, width, height, intro);
-		Fonts.jelloFontAddAlt.drawString(g, selectedModule.getName(), x + 8, y + 8, themeText(false, intro));
+		Fonts.jelloFontMedium12.drawString(g, selectedModule.getName(), x + 10, y + 6.5f, headerText(intro));
 		if (settingsPageCount() > 1) {
-			Fonts.jelloFontGui.drawString(g, "< " + (settingsPage + 1) + "/" + settingsPageCount() + " >",
-				x + width - 62, y + 9, themeText(false, intro));
+			Fonts.jelloFontRegular.drawString(g, "< " + (settingsPage + 1) + "/" + settingsPageCount() + " >",
+				x + width - 62, y + 8.5f, mutedText(intro));
 		}
 
 		int index = 0;
@@ -400,33 +425,36 @@ public class JelloGui extends Screen {
 			if (value instanceof BooleanValue bool) {
 				float bx = colX + colW - 19;
 				Render2D.image(g, bool.getValue() ? "checked" : "unchecked", bx, rowY, 12, 12, Render2D.white(intro));
-				Fonts.jelloFontGui.drawString(g, label, colX + 7, rowY + 3, themeText(false, intro));
+				Fonts.jelloFontRegular.drawString(g, label, colX + 7, rowY + 2.5f, themeText(false, intro));
 			} else if (value instanceof ModeValue mode) {
 				float bx = colX + colW - 96;
-				Render2D.rect(g, bx, rowY, colX + colW - 7, rowY + 13,
-					isDark() ? Render2D.color(1, 1, 1, intro * 0.10f) : Render2D.color(0, 0, 0, intro * 0.10f));
-				Fonts.jelloFontGui.drawString(g, mode.getMode(), bx + 4, rowY + 3, themeText(false, intro));
-				Fonts.jelloFontGui.drawString(g, label, colX + 7, rowY + 3, themeText(false, intro));
+				Render2D.roundedRectBorder(g, bx, rowY, 89, 13, 4,
+					applyAlpha(panelBorder(), intro), isDark() ? applyAlpha(0xFFFFFF, 0.08f * intro) : applyAlpha(0x000000, 0.06f * intro));
+				Fonts.jelloFontRegular.drawString(g, mode.getMode(), bx + 5, rowY + 2.5f, themeText(false, intro));
+				Fonts.jelloFontRegular.drawString(g, label, colX + 7, rowY + 2.5f, themeText(false, intro));
 			} else if (value instanceof NumberValue number) {
 				float sliderLeft = colX + colW - 60;
 				float sliderWidth = 40;
 				float actual = (float) ((number.getValue() - number.getMin()) / (number.getMax() - number.getMin()));
-				Render2D.image(g, "leftslider", sliderLeft, rowY + 10, 2, 3, Render2D.white(intro));
-				Render2D.rect(g, sliderLeft, rowY + 10, sliderLeft + sliderWidth * actual, rowY + 13,
-					Render2D.color(0x3B / 255f, 0x99 / 255f, 0xFC / 255f, intro));
-				Render2D.rect(g, sliderLeft + sliderWidth * actual, rowY + 10, sliderLeft + sliderWidth + 2, rowY + 13,
-					Render2D.color(0, 0, 0, intro * 0.1f));
-				float headX = sliderLeft + sliderWidth * actual - 4.5f;
-				Render2D.image(g, "sliderhead", headX, rowY - 4.5f, 11.5f, 12.5f, Render2D.white(intro));
-				Fonts.jelloFontGui.drawString(g, label, colX + 7, rowY + 3, themeText(false, intro));
+				Render2D.roundedRect(g, sliderLeft, rowY + 9, sliderWidth, 3, 1.5f,
+					isDark() ? applyAlpha(0xFFFFFF, 0.14f * intro) : applyAlpha(0x000000, 0.12f * intro));
+				Render2D.roundedRect(g, sliderLeft, rowY + 9, sliderWidth * actual, 3, 1.5f, applyAlpha(accent(), intro));
+				float headX = sliderLeft + sliderWidth * actual;
+				Render2D.circle(g, headX, rowY + 10.5f, 4.5f, applyAlpha(0xFFFFFFFF, intro));
+				Render2D.circle(g, headX, rowY + 10.5f, 3.0f, applyAlpha(accent(), intro));
+				Fonts.jelloFontRegular.drawString(g, label, colX + 7, rowY + 2.5f, themeText(false, intro));
 			}
 			index++;
 		}
 	}
 
-	/** The 1.8 panel used JelloPanel.png (238x338, i.e. 119x169 at GUI scale) stretched around the body. */
+	/** Rounded glass panel: soft shadow, 1px border, body and header band. */
 	private static void frame(GuiGraphicsExtractor g, float x, float y, float w, float h, float alpha) {
-		Render2D.image(g, panelTexture(), x - BORDER, y - BORDER, w + BORDER * 2, h + BORDER * 2, Render2D.white(alpha));
+		Render2D.roundedRect(g, x - 5, y - 3, w + 10, h + 10, 12, applyAlpha(0x000000, 0.30f * alpha));
+		Render2D.roundedRectBorder(g, x - 1, y - 1, w + 2, h + 2, 9, applyAlpha(panelBorder(), alpha),
+			applyAlpha(panelBody(), alpha));
+		Render2D.roundedRect(g, x, y, w, HEADER_H, 8, applyAlpha(panelHeader(), alpha));
+		Render2D.rect(g, x, y + HEADER_H - 8, x + w, y + HEADER_H, applyAlpha(panelHeader(), alpha));
 	}
 
 	@Override
@@ -615,7 +643,7 @@ public class JelloGui extends Screen {
 			if (!Render2D.hovering(x, y, PANEL_W, PANEL_H, mx, my) || max <= 0) {
 				return;
 			}
-			scroll = Math.max(0, Math.min(max, scroll - delta * 18.5f));
+			scroll = Math.max(0, Math.min(max, Math.round((scroll - delta * 15f) / 15f) * 15f));
 			scrollFade = 1;
 		}
 
@@ -652,26 +680,27 @@ public class JelloGui extends Screen {
 		public void draw(GuiGraphicsExtractor g, int mouseX, int mouseY, float alpha) {
 			frame(g, x, y, PANEL_W, PANEL_H, alpha);
 			if (centerText()) {
-				Fonts.jelloFontAddAlt.drawCenteredString(g, category.name, x + PANEL_W / 2f, y + 8, headerText(alpha));
+				Fonts.jelloFontMedium12.drawCenteredString(g, category.name, x + PANEL_W / 2f, y + 6.5f, headerText(alpha));
 			} else {
-				Fonts.jelloFontAddAlt.drawString(g, category.name, x + 10, y + 8, headerText(alpha));
+				Fonts.jelloFontMedium12.drawString(g, category.name, x + 10, y + 6.5f, headerText(alpha));
 			}
 			List<Module> modules = Jello.getModulesInCategory(category);
-			Render2D.scissor(g, x, y + HEADER_H, x + PANEL_W, y + HEADER_H + LIST_H);
+			Render2D.scissor(g, x + 2, y + HEADER_H, x + PANEL_W - 2, y + HEADER_H + LIST_H);
 			for (int i = 0; i < modules.size(); i++) {
 				Module module = modules.get(i);
-				float rowY = y + HEADER_H + i * ROW_H - Anim.smooth(scroll, lastScroll);
+				float rowY = y + HEADER_H + i * ROW_H - Anim.smooth(scroll, lastScroll) + 1;
 				float hover = Anim.smooth(module.hoverPercent, module.lastHoverPercent);
-				int background = module.isToggled()
-					? Render2D.color(42 / 255f, 165 / 255f, 255 / 255f, alpha * (200 + 55 * hover) / 255f)
-					: (isDark() ? Render2D.color(30 / 255f, 30 / 255f, 30 / 255f, alpha)
-						: Render2D.color(1f, 1f, 1f, alpha * (0.8f + 0.16f * hover)));
-				Render2D.rect(g, x, rowY, x + PANEL_W, rowY + ROW_H, background);
+				if (module.isToggled()) {
+					Render2D.roundedRect(g, x + 3, rowY, PANEL_W - 6, ROW_H - 2, 4,
+						applyAlpha(accent(), alpha * (0.82f + 0.18f * hover)));
+				} else if (hover > 0.02f) {
+					Render2D.roundedRect(g, x + 3, rowY, PANEL_W - 6, ROW_H - 2, 4, applyAlpha(hoverRow(), alpha * hover));
+				}
 				if (centerText()) {
-					Fonts.jelloFontAddAlt3.drawCenteredString(g, module.getName(), x + PANEL_W / 2f, rowY + 3.5f,
+					Fonts.jelloFontRegular.drawCenteredString(g, module.getName(), x + PANEL_W / 2f, rowY + 2.5f,
 						themeText(module.isToggled(), alpha));
 				} else {
-					Fonts.jelloFontAddAlt3.drawString(g, module.getName(), x + 10, rowY + 3.5f,
+					Fonts.jelloFontRegular.drawString(g, module.getName(), x + 10, rowY + 2.5f,
 						themeText(module.isToggled(), alpha));
 				}
 			}
@@ -680,13 +709,10 @@ public class JelloGui extends Screen {
 				float max = Math.max(1, modules.size() * ROW_H - LIST_H);
 				float barHeight = LIST_H * (LIST_H / (modules.size() * ROW_H + 1));
 				float barY = y + HEADER_H + (LIST_H - barHeight) * (scroll / max);
-				Render2D.rect(g, x + PANEL_W - 5, y + HEADER_H, x + PANEL_W - 3.5f, y + HEADER_H + LIST_H,
-					isDark() ? Render2D.color(1, 1, 1, 0.10f * scrollFade * alpha) : Render2D.color(0, 0, 0, 0.10f * scrollFade * alpha));
-				Render2D.rect(g, x + PANEL_W - 5, barY, x + PANEL_W - 3.5f, barY + barHeight,
-					Render2D.color(0x3B / 255f, 0x99 / 255f, 0xFC / 255f, 0.8f * scrollFade * alpha));
+				Render2D.roundedRect(g, x + PANEL_W - 4.5f, y + HEADER_H, 2, LIST_H, 1,
+					isDark() ? applyAlpha(0xFFFFFF, 0.10f * scrollFade * alpha) : applyAlpha(0x000000, 0.10f * scrollFade * alpha));
+				Render2D.roundedRect(g, x + PANEL_W - 4.5f, barY, 2, barHeight, 1, applyAlpha(accent(), 0.8f * scrollFade * alpha));
 			}
-			Render2D.image(g, "jellopaneloverlay", x - BORDER, y - BORDER, PANEL_W + BORDER * 2, PANEL_H + BORDER * 2,
-				Render2D.white(alpha));
 		}
 	}
 

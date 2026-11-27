@@ -8,6 +8,7 @@ import com.mentalfrostbyte.jello.hud.TabGUI;
 import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.module.meteor.*;
+import com.mentalfrostbyte.jello.module.wurst.WurstModules;
 import com.mentalfrostbyte.jello.module.modules.*;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.nio.file.Path;
@@ -110,6 +111,7 @@ public final class Jello {
 		register(new Idk());
 		register(new ClickGUIModule());
 		register(new BunnyHop());
+		WurstModules.registerAll();
 		register(new AirJump());
 		register(new AirPlace());
 		register(new Ambience());

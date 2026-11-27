@@ -46,12 +46,12 @@ public class Compass {
 				int opacity = opacity(width, complete);
 				if ((opacity >>> 24) != 0) {
 					switch (d.type) {
-						case 1 -> Fonts.jelloFontBig.drawString(g, d.text, complete, 25, opacity);
+						case 1 -> Fonts.jelloFontBig.drawStringShadow(g, d.text, complete, 25, opacity);
 						case 2 -> {
 							Render2D.rect(g, location - 0.5f, 29, location + 0.5f, 34, opacity);
-							Fonts.jelloFontMarker.drawString(g, d.text, complete, 33.5f + 4, opacity);
+							Fonts.jelloFontMarker.drawStringShadow(g, d.text, complete, 33.5f + 4, opacity);
 						}
-						default -> Fonts.jelloFontMedium.drawString(g, d.text, complete,
+						default -> Fonts.jelloFontMedium.drawStringShadow(g, d.text, complete,
 							25 + Fonts.jelloFontBig.getHeight() / 2 - Fonts.jelloFontMedium.getHeight() / 2, opacity);
 					}
 				}

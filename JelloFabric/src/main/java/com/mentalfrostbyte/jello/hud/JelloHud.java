@@ -10,6 +10,7 @@ import com.mentalfrostbyte.jello.module.Category;
 import com.mentalfrostbyte.jello.module.Module;
 import com.mentalfrostbyte.jello.render.ColorSampler;
 import com.mentalfrostbyte.jello.render.Fonts;
+import com.mentalfrostbyte.jello.render.RegionBlur;
 import com.mentalfrostbyte.jello.render.Render2D;
 import com.mentalfrostbyte.jello.util.Anim;
 import com.mentalfrostbyte.jello.util.ColorUtil;
@@ -26,8 +27,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /** The in-game Jello overlay (GuiIngame hook in 1.8). */
 public class JelloHud {
-	private static final float KEY_X = 85;
-	private static final float KEY_Y = 135;
+	private static final float KEY_X = 90;
+	private static final float KEY_Y = 162;
 	private final Minecraft mc = Minecraft.getInstance();
 	private final TimerUtil sampleTimer = new TimerUtil();
 	/** 0/1 TabGUI top-left/right, 2/3 TabGUI bottom-left/right, 4/5 notification top/bottom. */
@@ -38,6 +39,8 @@ public class JelloHud {
 	public final CircleManager l = new CircleManager(), r = new CircleManager();
 	public final Compass compass = new Compass();
 	public final MiniMapRenderer miniMap = new MiniMapRenderer();
+	private final RegionBlur tabBlur = new RegionBlur("tabblur");
+	private final RegionBlur listBlur = new RegionBlur("listblur");
 
 	public JelloHud() {
 		EventManager.register(this);
@@ -146,14 +149,10 @@ public class JelloHud {
 	private void renderHud(GuiGraphicsExtractor g) {
 		Render2D.image(g, "jello", -0.5f, -0.5f, 86, 49);
 		boolean tab = Jello.isEnabled("TabGUI");
-		if (tab) {
-			// The Reborn tab shadow only covered five categories; stretch it over all seven.
-			Render2D.image(g, "tabguishadow", 0.5f, 40.5f, 84, Jello.tabgui.cats.size() * 15 + 6);
-		}
 		if (Jello.isEnabled("MiniMap")) {
-			// The minimap moved next to the seven-category TabGUI instead of overlapping it.
-			Render2D.image(g, "minimap", 84.5f, 44.5f, 84, 84);
-			miniMap.render(g, 89, 49, 75);
+			// Sigma layout: minimap directly under the category list, keys beside it.
+			Render2D.image(g, "minimap", 0.5f, 160.5f, 84, 84);
+			miniMap.render(g, 5, 165, 75);
 		}
 		if (Jello.isEnabled("KeyStrokes")) {
 			renderKeyStrokes(g);
@@ -165,13 +164,32 @@ public class JelloHud {
 
 	private void renderKeyStrokes(GuiGraphicsExtractor g) {
 		float kx = KEY_X, ky = KEY_Y;
-		Render2D.image(g, "keystrokes", kx - 1, ky - 1, 86, 86);
+		glass(g, kx - 4, ky - 4, 84, 84, 0.9f);
+		keyBox(g, kx + 25.5f, ky + 0.5f, kx + 49.5f, ky + 24.5f, "W");
+		keyBox(g, kx + 0.5f, ky + 25.5f, kx + 24.5f, ky + 49.5f, "A");
+		keyBox(g, kx + 25.5f, ky + 25.5f, kx + 49.5f, ky + 49.5f, "S");
+		keyBox(g, kx + 51f, ky + 25.5f, kx + 75f, ky + 49.5f, "D");
+		keyBox(g, kx + 0.5f, ky + 51f, kx + 37f, ky + 75f, "L");
+		keyBox(g, kx + 38.5f, ky + 51f, kx + 75f, ky + 75f, "R");
 		key(g, w, kx + 25.5f, ky + 0.5f, kx + 49.5f, ky + 24.5f);
 		key(g, a, kx + 0.5f, ky + 25.5f, kx + 24.5f, ky + 49.5f);
 		key(g, s, kx + 25.5f, ky + 25.5f, kx + 49.5f, ky + 49.5f);
 		key(g, d, kx + 51f, ky + 25.5f, kx + 75f, ky + 49.5f);
 		key(g, l, kx + 0.5f, ky + 51f, kx + 37f, ky + 75f);
 		key(g, r, kx + 38.5f, ky + 51f, kx + 75f, ky + 75f);
+		for (String[] label : new String[][] {{"W", String.valueOf(kx + 37.5f), String.valueOf(ky + 8.5f)},
+			{"A", String.valueOf(kx + 12f), String.valueOf(ky + 33.5f)},
+			{"S", String.valueOf(kx + 37.5f), String.valueOf(ky + 33.5f)},
+			{"D", String.valueOf(kx + 63f), String.valueOf(ky + 33.5f)},
+			{"L", String.valueOf(kx + 18.5f), String.valueOf(ky + 59f)},
+			{"R", String.valueOf(kx + 56.5f), String.valueOf(ky + 59f)}}) {
+			Fonts.jelloFontMedium12.drawCenteredShadow(g, label[0], Float.parseFloat(label[1]), Float.parseFloat(label[2]), 0xFFFFFFFF);
+		}
+	}
+
+	private void keyBox(GuiGraphicsExtractor g, float x0, float y0, float x1, float y1, String label) {
+		Render2D.roundedRectBorder(g, x0, y0, x1 - x0, y1 - y0, 3,
+			alpha(0x33FFFFFF, 0.9f), alpha(0x18191F, 0.55f));
 	}
 
 	/** The 1.8 code used a stencil of the key rectangle; a scissor does the same for these axis-aligned keys. */
@@ -182,56 +200,62 @@ public class JelloHud {
 	}
 
 	private void renderTabGui(GuiGraphicsExtractor g) {
-		// A fixed dark panel stays readable over every background (the sampled world tint looked patchy).
-		int top = 0xC0101010;
-		int bottom = 0xE0101010;
-		Render2D.gradient(g, 5, 45, 80, 45 + Jello.tabgui.cats.size() * 15 + 2, top, bottom);
 		TabGUI tabgui = Jello.tabgui;
 		double fps = Anim.fpsFactor(5);
-		if (tabgui.showModules) {
-			Category category = tabgui.cats.get(tabgui.currentCategory);
-			List<Module> modules = Jello.getModulesInCategory(category);
-			int size = modules.size();
-			int visible = Math.min(8, size);
-			int start = size <= visible ? 0 : Math.max(0, Math.min(category.selectedIndex - visible / 2, size - visible));
-			float smoothTrans = Anim.smooth(category.selectedTrans, category.lastSelectedTrans) - start * 15f;
-			if (size != 0) {
-				Render2D.gradient(g, 85, 45, 170, 45 + 15 * visible + 2.5f, top, bottom);
-				Render2D.imageUV(g, "tabguiselector", 85, 45 + smoothTrans, 85, 17.5f, 0, 0, 75, 17.5f, 75, 17.5f, -1);
-			}
-			for (int row = 0; row < visible; row++) {
-				Module m = modules.get(start + row);
-				if (row == 0) {
-					Render2D.imageUV(g, "tabguishadow2", 80.5f, 40.5f, 94, 20, 0, 0, 94, 20, 94, 86, -1);
-				} else if (row == visible - 1) {
-					Render2D.imageUV(g, "tabguishadow2", 80.5f, 40.5f + 15 * row + 5, 94, 20, 0, 64.5f, 94, 20, 94, 86, -1);
-				} else {
-					Render2D.imageUV(g, "tabguishadow2", 80.5f, 40.5f + 15 * row + 5, 94, 15, 0, 30, 94, 15, 94, 86, -1);
-				}
-				(m.isToggled() ? Fonts.jelloFontBoldSmall : Fonts.jelloFontMarker).drawString(g, m.getName(), 85 + 5.5f, 45 + 15 * row + 5, -1);
-			}
-		}
+		float panelH = tabgui.cats.size() * 15 + 10;
+		tabBlur.sample(5, 45, 80, panelH);
+		Render2D.image(g, tabBlur.id(), 5, 45, 80, panelH, -1);
+		glass(g, 5, 45, 80, panelH, 1f);
+
 		if (!Float.isFinite(tabgui.seenTrans)) {
 			tabgui.seenTrans = 0;
 		}
 		for (int i = 0; i < 2; i++) {
 			tabgui.seenTrans += (float) (((tabgui.currentCategory * 15) - tabgui.seenTrans) / fps - 0.001);
 		}
-		Render2D.image(g, "tabguiselector", 5, 45 + tabgui.seenTrans, 75, 17);
+		Render2D.roundedRect(g, 8, 50 + tabgui.seenTrans, 74, 14, 4, alpha(0xFF2F8FF7, 0.85f));
+
 		int x = 0;
 		for (Category c : tabgui.cats) {
-			boolean selected = c == tabgui.cats.get(tabgui.currentCategory);
-			if (!Float.isFinite(c.seenTrans)) {
-				c.seenTrans = 0;
-			}
-			for (int i = 0; i < 2; i++) {
-				c.seenTrans += (float) ((((selected ? 7 : 0) - c.seenTrans) / fps) + 0.001);
-			}
-			// TTF labels instead of the 150x34 bitmap category textures: crisp at every GUI scale.
-			Fonts.jelloFontMedium.drawString(g, c.name, 12 + c.seenTrans, 45 + x * 15 + 3.5f,
-				selected ? 0xFFFFFFFF : 0xCCFFFFFF);
+			boolean selected = x == tabgui.currentCategory;
+			Fonts.jelloFontRegular.drawStringShadow(g, c.name, 12, 52.5f + x * 15,
+				selected ? 0xFFFFFFFF : 0xFFB9BFCE);
 			x++;
 		}
+
+		if (tabgui.showModules) {
+			Category category = tabgui.cats.get(tabgui.currentCategory);
+			List<Module> modules = Jello.getModulesInCategory(category);
+			int size = modules.size();
+			int visible = Math.min(8, size);
+			int start = size <= visible ? 0 : Math.max(0, Math.min(category.selectedIndex - visible / 2, size - visible));
+			if (visible > 0) {
+				float listH = visible * 15 + 10;
+				listBlur.sample(88, 45, 92, listH);
+				Render2D.image(g, listBlur.id(), 88, 45, 92, listH, -1);
+				glass(g, 88, 45, 92, listH, 1f);
+				float smooth = Anim.smooth(category.selectedTrans, category.lastSelectedTrans) - start * 15f;
+				Render2D.roundedRect(g, 91, 50 + smooth, 86, 14, 4, alpha(0xFF2F8FF7, 0.22f));
+				Render2D.roundedRect(g, 91, 50 + smooth, 2, 14, 1, alpha(0xFF2F8FF7, 0.95f));
+				for (int row = 0; row < visible; row++) {
+					Module m = modules.get(start + row);
+					Fonts.jelloFontRegular.drawStringShadow(g, m.getName(), 97, 52.5f + row * 15,
+						m.isToggled() ? 0xFFFFFFFF : 0xFFC3C8D4);
+				}
+			}
+		}
+	}
+
+	private static void glass(GuiGraphicsExtractor g, float x, float y, float w, float h, float alpha) {
+		Render2D.roundedRect(g, x - 3, y - 3, w + 6, h + 6, 9, alpha(0x000000, 0.35f * alpha));
+		Render2D.roundedRectBorder(g, x, y, w, h, 7, alpha(0x33FFFFFF, alpha), alpha(0xA80F1016, alpha));
+		Render2D.roundedRect(g, x + 1, y + 1, w - 2, h * 0.45f, 6, alpha(0x0DFFFFFF, alpha));
+		Render2D.roundedRect(g, x + 10, y, w - 20, 1, 0, alpha(0xFF2F8FF7, 0.65f * alpha));
+	}
+
+	private static int alpha(int color, float a) {
+		int ca = (int) (((color >>> 24) & 0xFF) * Math.max(0, Math.min(1, a)));
+		return (ca << 24) | (color & 0x00FFFFFF);
 	}
 
 	private void renderArraylist(GuiGraphicsExtractor g) {
@@ -256,7 +280,7 @@ public class JelloHud {
 		yStart = 1;
 		for (Module m : enabled) {
 			float xStart = g.guiWidth() - Fonts.jelloFont.getStringWidth(m.getDisplayName()) - 5;
-			Fonts.jelloFont.drawString(g, m.getDisplayName(), xStart, yStart + 7.5f, 0xffffffff);
+			Fonts.jelloFontRegular.drawStringShadow(g, m.getDisplayName(), xStart, yStart + 7.5f, 0xffffffff);
 			yStart += 7.5f + 5.25f;
 		}
 		g.pose().popMatrix();

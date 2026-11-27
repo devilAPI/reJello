@@ -52,6 +52,22 @@ public final class JFont {
 		return x + getStringWidth(text);
 	}
 
+	/** Same as {@link #drawString} but with the vanilla drop shadow, for text over busy backgrounds. */
+	public float drawStringShadow(GuiGraphicsExtractor g, String text, float x, float y, int color) {
+		if ((color >>> 24) == 0 || text.isEmpty()) {
+			return x;
+		}
+		g.pose().pushMatrix();
+		g.pose().translate(Math.round(x), Math.round(y));
+		g.text(mc(), component(text), 0, 0, color, true);
+		g.pose().popMatrix();
+		return x + getStringWidth(text);
+	}
+
+	public float drawCenteredShadow(GuiGraphicsExtractor g, String text, float x, float y, int color) {
+		return drawStringShadow(g, text, x - getStringWidth(text) / 2f, y, color);
+	}
+
 	public float drawNoBSString(GuiGraphicsExtractor g, String text, float x, float y, int color) {
 		return drawString(g, text, x, y, color);
 	}

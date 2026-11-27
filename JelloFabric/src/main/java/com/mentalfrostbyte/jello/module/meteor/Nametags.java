@@ -38,7 +38,7 @@ public class Nametags extends Module {
 			float x = (float) ((head.x * 0.5 + 0.5) * event.graphics.guiWidth());
 			float y = (float) ((-head.y * 0.5 + 0.5) * event.graphics.guiHeight());
 			String text = player.getName().getString() + " " + Math.round(player.getHealth());
-			Fonts.jelloFont.drawCenteredString(event.graphics, text, x, y, 0xFFFFFFFF);
+			Fonts.jelloFontRegular.drawCenteredShadow(event.graphics, text, x, y, 0xFFFFFFFF);
 			float health = Math.max(0, player.getHealth() / player.getMaxHealth());
 			com.mentalfrostbyte.jello.render.Render2D.rect(event.graphics, x - 20, y + 10, x + 20, y + 12, 0x88000000);
 			com.mentalfrostbyte.jello.render.Render2D.rect(event.graphics, x - 20, y + 10, x - 20 + 40 * health, y + 12,

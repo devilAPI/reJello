@@ -18,6 +18,7 @@ public final class Fonts {
 	public static final JFont jelloFontSmallPassword = new JFont("light8", 8);
 	public static final JFont jelloFontBig = new JFont("medium20_5", 20.5f);
 	public static final JFont jelloFontMedium = new JFont("light12_5", 12.5f);
+	public static final JFont jelloFontMedium12 = new JFont("medium12", 12);
 	public static final JFont font = new JFont("regular9", 9);
 	public static final JFont fontBig = new JFont("regular16_5", 16.5f);
 	public static final JFont fontSmall = new JFont("regular7", 7);

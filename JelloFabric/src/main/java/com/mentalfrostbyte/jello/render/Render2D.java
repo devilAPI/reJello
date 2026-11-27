@@ -101,6 +101,28 @@ public final class Render2D {
 		g.pose().popMatrix();
 	}
 
+	/** Rounded rectangle (solid). */
+	public static void roundedRect(GuiGraphicsExtractor g, float x, float y, float w, float h, float radius, int color) {
+		if (w <= 0 || h <= 0 || (color >>> 24) == 0) {
+			return;
+		}
+		float r = Math.min(radius, Math.min(w, h) / 2f);
+		rect(g, x + r, y, x + w - r, y + h, color);
+		rect(g, x, y + r, x + r, y + h - r, color);
+		rect(g, x + w - r, y + r, x + w, y + h - r, color);
+		circle(g, x + r, y + r, r, color);
+		circle(g, x + w - r, y + r, r, color);
+		circle(g, x + r, y + h - r, r, color);
+		circle(g, x + w - r, y + h - r, r, color);
+	}
+
+	/** Rounded rectangle with a 1px-style border. */
+	public static void roundedRectBorder(GuiGraphicsExtractor g, float x, float y, float w, float h, float radius,
+		int border, int fill) {
+		roundedRect(g, x, y, w, h, radius, border);
+		roundedRect(g, x + 1, y + 1, w - 2, h - 2, Math.max(0, radius - 1), fill);
+	}
+
 	public static void circle(GuiGraphicsExtractor g, float cx, float cy, float radius, int color) {
 		if (radius <= 0) {
 			return;
