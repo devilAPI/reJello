@@ -70,7 +70,10 @@ TTF fonts, dot commands, mode/boolean/number settings and the offline alt manage
 
 - Settings: `BooleanValue`, `NumberValue` and the Reborn `ModeValue` (cycle dropdown) are supported and
   persisted in `Jello/Modules.txt` / `Jello/Settings.txt`.
-- The ClickGUI uses a fixed virtual canvas in a 4+3 panel grid so all seven categories stay on screen.
+- The ClickGUI uses the Reborn look: `JelloPanelNew`/`JelloPanelDark` panels, a Light/Dark theme,
+Center/Right module text, the blue selection colour, the panel overlay and background particles, laid out
+on a fixed virtual canvas in a 4+3 grid so all seven categories stay on screen. Theme, blur, particles and
+text position are controlled by the `ClickGUI` module's settings.
 - Modules that depend on 1.8/1.18 packet exploits or server-specific anti-cheat behaviour (Disabler,
   ServerCrasher, AutoPlay, JelloBot, Timer, Freecam, Chams, ItemPhysics, Animations) are registered with
   their settings and categories but are intentionally not given a destructive implementation.

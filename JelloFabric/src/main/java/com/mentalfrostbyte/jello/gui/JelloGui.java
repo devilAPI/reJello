@@ -12,6 +12,7 @@ import com.mentalfrostbyte.jello.setting.Value;
 import com.mentalfrostbyte.jello.util.Anim;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -58,9 +59,15 @@ public class JelloGui extends Screen {
 	private boolean closing;
 	/** True once the screen has actually been shown; prevents the close animation from running at startup. */
 	private boolean wasOpen;
+	private final List<Particle> particles = new ArrayList<>();
+	private final Random random = new Random();
 
 	public JelloGui() {
 		super(Component.literal("Jello"));
+		for (int i = 0; i < 42; i++) {
+			particles.add(new Particle(random.nextFloat() * VIRTUAL_W, random.nextFloat() * VIRTUAL_H,
+				(random.nextFloat() - 0.5f) * 0.35f, (random.nextFloat() - 0.5f) * 0.35f, 0.6f + random.nextFloat() * 1.4f));
+		}
 		int index = 0;
 		for (Category category : Category.values()) {
 			float x = 10 + (index % 4) * (PANEL_W + PANEL_GAP);
@@ -145,9 +152,51 @@ public class JelloGui extends Screen {
 			selectedValue = null;
 		}
 		settingsTrans = Math.max(0, Math.min(1, settingsTrans));
+		for (Particle particle : particles) {
+			particle.x += particle.vx;
+			particle.y += particle.vy;
+			if (particle.x < 0) particle.x += VIRTUAL_W;
+			if (particle.x > VIRTUAL_W) particle.x -= VIRTUAL_W;
+			if (particle.y < 0) particle.y += VIRTUAL_H;
+			if (particle.y > VIRTUAL_H) particle.y -= VIRTUAL_H;
+		}
 		for (Panel panel : panels) {
 			panel.onTick();
 		}
+	}
+
+	/** Theme/text/particle settings come from the Reborn ClickGUI module. */
+	private static boolean isDark() {
+		Module module = Jello.getModule("ClickGUI");
+		Value value = module == null ? null : module.getValue("Theme");
+		return value instanceof ModeValue mode && mode.is("Dark");
+	}
+
+	private static boolean centerText() {
+		Module module = Jello.getModule("ClickGUI");
+		Value value = module == null ? null : module.getValue("TextPos");
+		return !(value instanceof ModeValue mode) || mode.is("Center");
+	}
+
+	private static boolean particlesEnabled() {
+		Module module = Jello.getModule("ClickGUI");
+		Value value = module == null ? null : module.getValue("Particles");
+		return !(value instanceof BooleanValue bool) || bool.getValue();
+	}
+
+	private static String panelTexture() {
+		return isDark() ? "jellopanel_dark" : "jellopanelnew";
+	}
+
+	private static int themeText(boolean toggled, float alpha) {
+		if (isDark()) {
+			return Render2D.color(0.9f, 0.9f, 0.9f, alpha);
+		}
+		return toggled ? Render2D.color(1, 1, 1, alpha) : Render2D.color(0, 0, 0, alpha);
+	}
+
+	private static int headerText(float alpha) {
+		return isDark() ? Render2D.color(1, 1, 1, alpha) : Render2D.color(0x6F6F6F / 255f, 0x6F6F6F / 255f, 0x6F6F6F / 255f, alpha);
 	}
 
 	private float fitScale() {
@@ -196,6 +245,12 @@ public class JelloGui extends Screen {
 		g.pose().translate(width / 2f, height / 2f);
 		g.pose().scale(scale, scale);
 		g.pose().translate(-VIRTUAL_W / 2f, -VIRTUAL_H / 2f);
+		if (particlesEnabled()) {
+			for (Particle particle : particles) {
+				Render2D.circle(g, particle.x, particle.y, particle.size,
+					Render2D.color(0.35f, 0.62f, 1f, 0.10f));
+			}
+		}
 		drawPanels(g, this.mouseX, this.mouseY);
 		drawSettings(g, this.mouseX, this.mouseY);
 		g.pose().popMatrix();
@@ -251,7 +306,7 @@ public class JelloGui extends Screen {
 		if (intro <= 0.001f) {
 			return;
 		}
-		Render2D.rect(g, 0, 0, VIRTUAL_W, VIRTUAL_H, Render2D.color(0, 0, 0, intro * 96 / 255f));
+		Render2D.rect(g, 0, 0, VIRTUAL_W, VIRTUAL_H, Render2D.color(0, 0, 0, intro * 180 / 255f));
 		float width = popupWidth(intro);
 		int columns = popupColumns();
 		int rows = (selectedModule.getValues().size() + columns - 1) / columns;
@@ -259,8 +314,7 @@ public class JelloGui extends Screen {
 		float x = popupX(intro, width);
 		float y = selectedCategory.y;
 		frame(g, x, y, width, height, intro);
-		Render2D.rect(g, x, y, x + width, y + HEADER_H, Render2D.color(0.6f, 0.6f, 0.6f, intro));
-		Fonts.jelloFontAddAlt.drawString(g, selectedCategory.category.name, x + 6, y + 8, Render2D.color(1f, 1f, 1f, intro));
+		Fonts.jelloFontAddAlt.drawString(g, selectedModule.getName(), x + 8, y + 8, Render2D.color(1f, 1f, 1f, intro));
 
 		int index = 0;
 		for (Value value : selectedModule.getValues()) {
@@ -271,24 +325,25 @@ public class JelloGui extends Screen {
 			if (value instanceof BooleanValue bool) {
 				float bx = colX + 88;
 				Render2D.image(g, bool.getValue() ? "checked" : "unchecked", bx, rowY, 12, 12, Render2D.white(intro));
-				Fonts.jelloFontGui.drawString(g, bool.getName(), colX + 7, rowY + 3, Render2D.color(0, 0, 0, intro));
+				Fonts.jelloFontGui.drawString(g, bool.getName(), colX + 7, rowY + 3, themeText(false, intro));
 			} else if (value instanceof ModeValue mode) {
 				float bx = colX + 30;
-				Render2D.rect(g, bx, rowY, colX + 92, rowY + 13, Render2D.color(0, 0, 0, intro * 0.12f));
-				Fonts.jelloFontGui.drawString(g, mode.getMode(), bx + 4, rowY + 3, Render2D.color(0, 0, 0, intro));
-				Fonts.jelloFontGui.drawString(g, mode.getName(), colX + 7, rowY + 3, Render2D.color(0, 0, 0, intro));
+				Render2D.rect(g, bx, rowY, colX + 92, rowY + 13,
+					isDark() ? Render2D.color(1, 1, 1, intro * 0.10f) : Render2D.color(0, 0, 0, intro * 0.10f));
+				Fonts.jelloFontGui.drawString(g, mode.getMode(), bx + 4, rowY + 3, themeText(false, intro));
+				Fonts.jelloFontGui.drawString(g, mode.getName(), colX + 7, rowY + 3, themeText(false, intro));
 			} else if (value instanceof NumberValue number) {
 				float sliderLeft = colX + 11 + 60;
 				float sliderWidth = 30;
 				float actual = (float) ((number.getValue() - number.getMin()) / (number.getMax() - number.getMin()));
 				Render2D.image(g, "leftslider", sliderLeft, rowY + 10, 2, 3, Render2D.white(intro));
 				Render2D.rect(g, sliderLeft, rowY + 10, sliderLeft + sliderWidth * actual, rowY + 13,
-					Render2D.color(0.23f, 0.6f, 0.99f, intro));
+					Render2D.color(0x3B / 255f, 0x99 / 255f, 0xFC / 255f, intro));
 				Render2D.rect(g, sliderLeft + sliderWidth * actual, rowY + 10, sliderLeft + sliderWidth + 2, rowY + 13,
 					Render2D.color(0, 0, 0, intro * 0.1f));
 				float headX = sliderLeft + sliderWidth * actual - 4.5f;
 				Render2D.image(g, "sliderhead", headX, rowY - 4.5f, 11.5f, 12.5f, Render2D.white(intro));
-				Fonts.jelloFontGui.drawString(g, number.getName(), colX + 7, rowY + 3, Render2D.color(0, 0, 0, intro));
+				Fonts.jelloFontGui.drawString(g, number.getName(), colX + 7, rowY + 3, themeText(false, intro));
 			}
 			index++;
 		}
@@ -296,7 +351,7 @@ public class JelloGui extends Screen {
 
 	/** The 1.8 panel used JelloPanel.png (238x338, i.e. 119x169 at GUI scale) stretched around the body. */
 	private static void frame(GuiGraphicsExtractor g, float x, float y, float w, float h, float alpha) {
-		Render2D.image(g, "jellopanel", x - BORDER, y - BORDER, w + BORDER * 2, h + BORDER * 2, Render2D.white(alpha));
+		Render2D.image(g, panelTexture(), x - BORDER, y - BORDER, w + BORDER * 2, h + BORDER * 2, Render2D.white(alpha));
 	}
 
 	@Override
@@ -493,8 +548,11 @@ public class JelloGui extends Screen {
 
 		public void draw(GuiGraphicsExtractor g, int mouseX, int mouseY, float alpha) {
 			frame(g, x, y, PANEL_W, PANEL_H, alpha);
-			Fonts.jelloFontAddAlt.drawCenteredString(g, category.name, x + PANEL_W / 2f, y + 8,
-				Render2D.color(1, 1, 1, alpha));
+			if (centerText()) {
+				Fonts.jelloFontAddAlt.drawCenteredString(g, category.name, x + PANEL_W / 2f, y + 8, headerText(alpha));
+			} else {
+				Fonts.jelloFontAddAlt.drawString(g, category.name, x + 10, y + 8, headerText(alpha));
+			}
 			List<Module> modules = Jello.getModulesInCategory(category);
 			Render2D.scissor(g, x, y + HEADER_H, x + PANEL_W, y + HEADER_H + 110);
 			for (int i = 0; i < modules.size(); i++) {
@@ -502,11 +560,17 @@ public class JelloGui extends Screen {
 				float rowY = y + HEADER_H + i * ROW_H - Anim.smooth(scroll, lastScroll);
 				float hover = Anim.smooth(module.hoverPercent, module.lastHoverPercent);
 				int background = module.isToggled()
-					? Render2D.color(0.16f, 0.65f, 1f, alpha)
-					: Render2D.color(0.8f + 0.16f * hover, 0.8f + 0.16f * hover, 0.8f + 0.16f * hover, alpha);
+					? Render2D.color(42 / 255f, 165 / 255f, 255 / 255f, alpha * (200 + 55 * hover) / 255f)
+					: (isDark() ? Render2D.color(30 / 255f, 30 / 255f, 30 / 255f, alpha)
+						: Render2D.color(1f, 1f, 1f, alpha * (0.8f + 0.16f * hover)));
 				Render2D.rect(g, x, rowY, x + PANEL_W, rowY + ROW_H, background);
-				Fonts.jelloFontAddAlt3.drawCenteredString(g, module.getName(), x + PANEL_W / 2f, rowY + 3.5f,
-					module.isToggled() ? Render2D.color(1, 1, 1, alpha) : Render2D.color(0, 0, 0, alpha));
+				if (centerText()) {
+					Fonts.jelloFontAddAlt3.drawCenteredString(g, module.getName(), x + PANEL_W / 2f, rowY + 3.5f,
+						themeText(module.isToggled(), alpha));
+				} else {
+					Fonts.jelloFontAddAlt3.drawString(g, module.getName(), x + 10, rowY + 3.5f,
+						themeText(module.isToggled(), alpha));
+				}
 			}
 			g.disableScissor();
 			if (scrollFade > 0.01f) {
@@ -514,10 +578,28 @@ public class JelloGui extends Screen {
 				float barHeight = 110 * (110 / (modules.size() * ROW_H + 1));
 				float barY = y + HEADER_H + (110 - barHeight) * (scroll / max);
 				Render2D.rect(g, x + PANEL_W - 5, y + HEADER_H, x + PANEL_W - 3.5f, y + HEADER_H + 110,
-					Render2D.color(0, 0, 0, 0.15f * scrollFade * alpha));
+					isDark() ? Render2D.color(1, 1, 1, 0.10f * scrollFade * alpha) : Render2D.color(0, 0, 0, 0.10f * scrollFade * alpha));
 				Render2D.rect(g, x + PANEL_W - 5, barY, x + PANEL_W - 3.5f, barY + barHeight,
-					Render2D.color(1, 1, 1, 0.5f * scrollFade * alpha));
+					Render2D.color(0x3B / 255f, 0x99 / 255f, 0xFC / 255f, 0.8f * scrollFade * alpha));
 			}
+			Render2D.image(g, "jellopaneloverlay", x - BORDER, y - BORDER, PANEL_W + BORDER * 2, PANEL_H + BORDER * 2,
+				Render2D.white(alpha));
+		}
+	}
+
+	private static final class Particle {
+		float x;
+		float y;
+		final float vx;
+		final float vy;
+		final float size;
+
+		Particle(float x, float y, float vx, float vy, float size) {
+			this.x = x;
+			this.y = y;
+			this.vx = vx;
+			this.vy = vy;
+			this.size = size;
 		}
 	}
 }
